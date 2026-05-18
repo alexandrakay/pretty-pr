@@ -203,7 +203,7 @@ export default function ConfigPage() {
         <section className="rounded-lg border border-border bg-surface p-6 flex flex-col gap-3">
           <p className="font-semibold text-sm text-text-primary">Using the CLI?</p>
           <pre className="rounded border border-border bg-background px-4 py-3 text-sm font-mono text-text-primary overflow-x-auto">
-            npx prettypr
+            npx @alexandrakay/pretty-pr
           </pre>
           <p className="text-xs text-text-muted leading-relaxed">
             Once your <code className="text-text-primary font-mono">.prettyrc</code> is in place, every run uses your preferences automatically.

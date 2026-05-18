@@ -5,7 +5,7 @@ Your commits tell the whole story. Your PR should too.
 **prettypr** turns your git history into clean pull request descriptions, changelogs, and reviewer notes — in seconds.
 
 ```
-npx prettypr
+npx @alexandrakay/pretty-pr
 ```
 
 ---
@@ -35,23 +35,23 @@ Or drop it in a `.env.local` file at your repo root — prettypr picks it up aut
 ## Usage
 
 ```bash
-npx prettypr                   # commits only — fast, good enough for most PRs
-npx prettypr --diff            # includes diff — richer output, better testing notes
-npx prettypr --full            # everything: commits + diff + branch — best results
-npx prettypr --base main       # compare against a specific base branch
-npx prettypr --range abc..def  # specific commit range
-npx prettypr --out pr.md       # write output to a markdown file
-npx prettypr --open            # generate and open a GitHub PR (requires gh CLI)
-npx prettypr --draft           # use with --open to open as a draft PR
+npx @alexandrakay/pretty-pr                   # commits only — fast, good enough for most PRs
+npx @alexandrakay/pretty-pr --diff            # includes diff — richer output, better testing notes
+npx @alexandrakay/pretty-pr --full            # everything: commits + diff + branch — best results
+npx @alexandrakay/pretty-pr --base main       # compare against a specific base branch
+npx @alexandrakay/pretty-pr --range abc..def  # specific commit range
+npx @alexandrakay/pretty-pr --out pr.md       # write output to a markdown file
+npx @alexandrakay/pretty-pr --open            # generate and open a GitHub PR (requires gh CLI)
+npx @alexandrakay/pretty-pr --draft           # use with --open to open as a draft PR
 ```
 
 ### Output quality ladder
 
 | Mode | Command | Output |
 |------|---------|--------|
-| Commits only | `npx prettypr` | Decent PR title, okay description |
-| Commits + diff | `npx prettypr --diff` | Strong title, solid description, testing notes |
-| Commits + diff + branch | `npx prettypr --full` | Full picture — best title, reviewer notes, checklist |
+| Commits only | `npx @alexandrakay/pretty-pr` | Decent PR title, okay description |
+| Commits + diff | `npx @alexandrakay/pretty-pr --diff` | Strong title, solid description, testing notes |
+| Commits + diff + branch | `npx @alexandrakay/pretty-pr --full` | Full picture — best title, reviewer notes, checklist |
 
 ---
 
@@ -92,7 +92,7 @@ prettypr reads `.prettyrc` automatically — no flags needed. Commit it to your 
 If you have the [GitHub CLI](https://cli.github.com) installed and authenticated:
 
 ```bash
-npx prettypr --full --open
+npx @alexandrakay/pretty-pr --full --open
 ```
 
 prettypr generates the copy, opens a PR, and fills in the title and description. Add `--draft` for a draft PR.
@@ -104,7 +104,7 @@ prettypr generates the copy, opens a PR, and fills in the title and description.
 If you use it every day:
 
 ```bash
-npm install -g prettypr
+npm install -g @alexandrakay/pretty-pr
 prettypr --full
 ```
 
