@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { parseOutput, SECTIONS } from "@/app/lib/parseOutput";
 import OutputCard from "./OutputCard";
+import LoadingSkeleton from "./LoadingSkeleton";
 
 export default function GenerateForm() {
   const [commits, setCommits] = useState("");
@@ -47,7 +48,9 @@ export default function GenerateForm() {
   }
 
   const parsed = parseOutput(output);
-  const hasCards = SECTIONS.some((s) => parsed[s]);
+  const hasOutput = output.length > 0;
+  const showSkeleton = loading && !hasOutput;
+  const cards = SECTIONS.filter((s) => parsed[s]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -95,13 +98,15 @@ export default function GenerateForm() {
         <p className="text-sm text-red-400">{error}</p>
       )}
 
-      {hasCards && (
+      {showSkeleton && <LoadingSkeleton />}
+
+      {cards.length > 0 && (
         <div className="flex flex-col gap-4">
-          {SECTIONS.map((section) => {
-            const content = parsed[section];
-            if (!content) return null;
-            return <OutputCard key={section} title={section} content={content} />;
-          })}
+          {cards.map((section) => (
+            <div key={section} className="animate-fade-slide-in">
+              <OutputCard title={section} content={parsed[section]!} />
+            </div>
+          ))}
         </div>
       )}
     </div>
