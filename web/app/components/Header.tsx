@@ -5,6 +5,7 @@ export default function Header() {
         P<span className="text-accent">R</span>etty
       </a>
       <nav className="flex items-center gap-6 text-sm text-text-muted">
+        <a href="/review" className="hover:text-text-primary transition-colors">Review</a>
         <a href="/cli" className="hover:text-text-primary transition-colors">CLI docs</a>
         <a href="/config" className="hover:text-text-primary transition-colors">Config</a>
         <a href="/app" className="rounded-lg bg-accent hover:bg-accent-hover px-4 py-2 text-white font-medium transition-colors">
