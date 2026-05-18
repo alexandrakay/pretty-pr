@@ -1,22 +1,37 @@
-import GenerateForm from "./components/GenerateForm";
+import Header from "./components/Header";
+import HeroSection from "./components/landing/HeroSection";
+import ProblemSection from "./components/landing/ProblemSection";
+import OutputsSection from "./components/landing/OutputsSection";
+import DemoSection from "./components/landing/DemoSection";
+import TwoWaysSection from "./components/landing/TwoWaysSection";
+import TeamsSection from "./components/landing/TeamsSection";
+import VibeCodingSection from "./components/landing/VibeCodingSection";
+import HowItWorksSection from "./components/landing/HowItWorksSection";
+import SocialProofSection from "./components/landing/SocialProofSection";
+import FinalCTASection from "./components/landing/FinalCTASection";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-xl font-bold tracking-tight">
-            P<span className="text-accent">R</span>etty
-          </span>
-          <span className="text-text-muted text-sm hidden sm:block">
-            Your commits tell the whole story. Your PR should too.
-          </span>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-12">
-        <GenerateForm />
+      <Header />
+      <main>
+        <HeroSection />
+        <ProblemSection />
+        <OutputsSection />
+        <DemoSection />
+        <TwoWaysSection />
+        <TeamsSection />
+        <VibeCodingSection />
+        <HowItWorksSection />
+        <SocialProofSection />
+        <FinalCTASection />
       </main>
+      <footer className="border-t border-border px-6 py-6 text-center text-xs text-text-muted">
+        P<span className="text-accent">R</span>etty — Week 3 of{" "}
+        <a href="https://github.com/alexandrakay" className="hover:text-text-primary transition-colors">
+          12 weeks building in public
+        </a>
+      </footer>
     </div>
   );
 }
