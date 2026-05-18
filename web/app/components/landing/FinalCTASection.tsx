@@ -16,7 +16,7 @@ export default function FinalCTASection() {
           Try the web app
         </a>
         <code className="rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
-          npx @alexandrakay/pretty-pr
+          npx prettypr
         </code>
       </div>
       <p className="text-xs text-text-muted">
