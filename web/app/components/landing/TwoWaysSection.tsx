@@ -20,15 +20,15 @@ export default function TwoWaysSection() {
           <div className="rounded-lg border border-border bg-background p-8 flex flex-col gap-4">
             <h3 className="text-lg font-semibold">CLI</h3>
             <p className="text-sm text-text-muted leading-relaxed">
-              Install nothing. Run <code className="font-mono text-xs bg-surface px-1 py-0.5 rounded">npx pretty-pr</code> in
+              Install nothing. Run <code className="font-mono text-xs bg-surface px-1 py-0.5 rounded">npx @alexandrakay/pretty-pr</code> in
               any repo. PRetty reads your git log, your diff, and your branch name — and generates
               everything your PR needs.
             </p>
             <pre className="text-xs font-mono bg-surface border border-border rounded-lg p-4 text-text-muted leading-relaxed overflow-x-auto">
-{`npx pretty-pr              # fast, commits only
-npx pretty-pr --diff       # richer output with code context
-npx pretty-pr --full       # everything, best results
-npx pretty-pr --out pr.md  # export to markdown`}
+{`npx @alexandrakay/pretty-pr              # fast
+npx @alexandrakay/pretty-pr --diff       # richer output
+npx @alexandrakay/pretty-pr --full       # best results
+npx @alexandrakay/pretty-pr --out pr.md  # export to file`}
             </pre>
             <a
               href="/cli"
