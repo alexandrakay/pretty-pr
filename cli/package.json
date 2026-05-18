@@ -1,0 +1,22 @@
+{
+  "name": "pretty-pr",
+  "version": "0.1.0",
+  "description": "Your commits tell the whole story. Your PR should too.",
+  "type": "module",
+  "bin": {
+    "pretty-pr": "./bin/pretty-pr.js"
+  },
+  "scripts": {
+    "dev": "node bin/pretty-pr.js",
+    "test": "node --test src/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "commander": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["git", "pr", "pull-request", "changelog", "developer-tools"],
+  "license": "MIT"
+}
