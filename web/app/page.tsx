@@ -1,3 +1,5 @@
+import GenerateForm from "./components/GenerateForm";
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -13,7 +15,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-12">
-        <p className="text-text-muted text-sm">Coming soon.</p>
+        <GenerateForm />
       </main>
     </div>
   );
