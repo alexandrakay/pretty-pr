@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { program } from 'commander'
 import { assertGitRepo, getBranchName, getBaseBranch, getCommits, getDiff, getStatus } from '../src/git.js'
-import { generate } from '../src/ai.js'
+import { generate, generateReview } from '../src/ai.js'
 import { printResult, writeToFile } from '../src/output.js'
 import { ghAvailable, parseOutput, openPR } from '../src/github.js'
 
@@ -16,6 +16,7 @@ program
   .option('--out <file>', 'write output to a markdown file')
   .option('--open', 'create a GitHub PR with the generated copy (requires gh CLI)')
   .option('--draft', 'open as a draft PR (use with --open)')
+  .option('--review', 'generate a reviewer brief instead of PR copy')
   .parse()
 
 const opts = program.opts()
@@ -32,7 +33,7 @@ if (opts.open && !ghAvailable()) {
   process.exit(1)
 }
 
-const useDiff = opts.diff || opts.full || opts.open
+const useDiff = opts.diff || opts.full || opts.open || opts.review
 const base = getBaseBranch(opts.base)
 const branch = getBranchName()
 const commits = getCommits(base, opts.range)
@@ -45,12 +46,14 @@ if (!commits) {
 const diff = useDiff ? getDiff(base, opts.range) : null
 const status = opts.full ? getStatus() : null
 
-console.log(`\n  Generating PR copy${useDiff ? ' (with diff)' : ''}...`)
+console.log(`\n  ${opts.review ? 'Generating reviewer brief' : 'Generating PR copy'}${useDiff ? ' (with diff)' : ''}...`)
 
 const context = { commits, diff, branch, status }
 
 try {
-  const result = await generate(context)
+  const result = opts.review
+    ? await generateReview(diff || '')
+    : await generate(context)
 
   if (opts.open) {
     printResult(result)
