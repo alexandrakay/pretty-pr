@@ -1,0 +1,78 @@
+#!/usr/bin/env node
+import { program } from 'commander'
+import { assertGitRepo, getBranchName, getBaseBranch, getCommits, getDiff, getStatus } from '../src/git.js'
+import { generate } from '../src/ai.js'
+import { printResult, writeToFile } from '../src/output.js'
+import { ghAvailable, parseOutput, openPR } from '../src/github.js'
+
+program
+  .name('pretty-pr')
+  .description('Your commits tell the whole story. Your PR should too.')
+  .version('0.1.0')
+  .option('--diff', 'include diff for richer output')
+  .option('--full', 'include everything: commits + diff + branch (slowest, best)')
+  .option('--base <branch>', 'base branch to compare against')
+  .option('--range <range>', 'specific commit range (e.g. abc..def)')
+  .option('--out <file>', 'write output to a markdown file')
+  .option('--open', 'create a GitHub PR with the generated copy (requires gh CLI)')
+  .option('--draft', 'open as a draft PR (use with --open)')
+  .parse()
+
+const opts = program.opts()
+
+try {
+  assertGitRepo()
+} catch (err) {
+  console.error(`\n  Error: ${err.message}\n`)
+  process.exit(1)
+}
+
+if (opts.open && !ghAvailable()) {
+  console.error('\n  Error: --open requires the GitHub CLI (gh). Install it at https://cli.github.com\n')
+  process.exit(1)
+}
+
+const useDiff = opts.diff || opts.full || opts.open
+const base = getBaseBranch(opts.base)
+const branch = getBranchName()
+const commits = getCommits(base, opts.range)
+
+if (!commits) {
+  console.error('\n  Error: No commits found.\n')
+  process.exit(1)
+}
+
+const diff = useDiff ? getDiff(base, opts.range) : null
+const status = opts.full ? getStatus() : null
+
+console.log(`\n  Generating PR copy${useDiff ? ' (with diff)' : ''}...`)
+
+const context = { commits, diff, branch, status }
+
+try {
+  const result = await generate(context)
+
+  if (opts.open) {
+    printResult(result)
+    const { title, body } = parseOutput(result)
+    console.log(`  Opening PR on GitHub${opts.draft ? ' (draft)' : ''}...`)
+    try {
+      const url = openPR({ title, body, base: base ?? 'main', draft: opts.draft })
+      console.log(`\n  PR created: ${url}\n`)
+    } catch (err) {
+      console.error(`\n  Error creating PR: ${err.message}\n`)
+      process.exit(1)
+    }
+  } else if (opts.out) {
+    writeToFile(result, opts.out)
+  } else {
+    printResult(result)
+  }
+} catch (err) {
+  if (err.status === 401) {
+    console.error('\n  Error: Invalid ANTHROPIC_API_KEY.\n')
+  } else {
+    console.error(`\n  Error: ${err.message}\n`)
+  }
+  process.exit(1)
+}
