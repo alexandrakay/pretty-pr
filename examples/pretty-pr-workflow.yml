@@ -1,0 +1,23 @@
+# Copy this file to .github/workflows/pretty-pr.yml in your repo.
+# Add ANTHROPIC_API_KEY to your repo's Settings → Secrets → Actions.
+
+name: PRetty
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: alexandrakay/pretty-pr@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          post-if-empty: 'true'   # only post when PR description is blank
+          mode: diff              # commits | diff | full
