@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { parseOutput, SECTIONS } from "@/app/lib/parseOutput";
+import OutputCard from "./OutputCard";
 
 export default function GenerateForm() {
   const [commits, setCommits] = useState("");
@@ -43,6 +45,9 @@ export default function GenerateForm() {
       setLoading(false);
     }
   }
+
+  const parsed = parseOutput(output);
+  const hasCards = SECTIONS.some((s) => parsed[s]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -90,10 +95,14 @@ export default function GenerateForm() {
         <p className="text-sm text-red-400">{error}</p>
       )}
 
-      {output && (
-        <pre className="whitespace-pre-wrap font-mono text-sm text-text-primary bg-surface border border-border rounded-lg p-6 leading-relaxed">
-          {output}
-        </pre>
+      {hasCards && (
+        <div className="flex flex-col gap-4">
+          {SECTIONS.map((section) => {
+            const content = parsed[section];
+            if (!content) return null;
+            return <OutputCard key={section} title={section} content={content} />;
+          })}
+        </div>
       )}
     </div>
   );
