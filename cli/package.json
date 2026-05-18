@@ -6,6 +6,10 @@
   "bin": {
     "pretty-pr": "./bin/pretty-pr.js"
   },
+  "files": [
+    "bin",
+    "src"
+  ],
   "scripts": {
     "dev": "node bin/pretty-pr.js",
     "test": "node --test src/*.test.js"
@@ -17,6 +21,11 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["git", "pr", "pull-request", "changelog", "developer-tools"],
-  "license": "MIT"
+  "keywords": ["git", "pr", "pull-request", "changelog", "developer-tools", "ai", "anthropic"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexandrakay/pretty-pr.git"
+  },
+  "homepage": "https://pretty-pr.vercel.app/cli"
 }
