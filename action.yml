@@ -1,0 +1,41 @@
+name: 'PRetty'
+description: 'Auto-generate PR descriptions from commits and post as a comment.'
+
+inputs:
+  anthropic-api-key:
+    description: 'Anthropic API key'
+    required: true
+  post-if-empty:
+    description: 'Only post if the PR description is empty (true/false)'
+    required: false
+    default: 'true'
+  mode:
+    description: 'Generation mode: commits, diff, or full'
+    required: false
+    default: 'diff'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install action dependencies
+      shell: bash
+      run: npm install --prefix ${{ github.action_path }}/action @anthropic-ai/sdk
+
+    - name: Generate and post PR description
+      shell: bash
+      run: node ${{ github.action_path }}/action/index.js
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        POST_IF_EMPTY: ${{ inputs.post-if-empty }}
+        MODE: ${{ inputs.mode }}
+        GITHUB_TOKEN: ${{ github.token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PR_BODY: ${{ github.event.pull_request.body }}
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+        HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        REPO: ${{ github.repository }}
