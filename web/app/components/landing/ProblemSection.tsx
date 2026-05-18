@@ -5,7 +5,7 @@ const problems = [
   },
   {
     title: "You know what a good PR looks like.",
-    body: "Clear title. What changed and why. Testing notes. Reviewer guidance. You just don't have time to write all of that every single time. So you write "fixes bug" and move on.",
+    body: 'Clear title. What changed and why. Testing notes. Reviewer guidance. You just don\'t have time to write all of that every single time. So you write "fixes bug" and move on.',
   },
   {
     title: "Your team writes PRs differently.",
