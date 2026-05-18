@@ -30,7 +30,7 @@ export default function OutputsSection() {
           <h2 className="text-3xl font-bold tracking-tight">One command. Five outputs.</h2>
           <p className="text-text-muted max-w-xl mx-auto">
             Whether you paste your commits in the browser or run{" "}
-            <code className="font-mono text-sm bg-surface-raised px-1.5 py-0.5 rounded">npx @alexandrakay/pretty-pr</code>{" "}
+            <code className="font-mono text-sm bg-surface-raised px-1.5 py-0.5 rounded">npx prettypr</code>{" "}
             in your terminal, PRetty gives you everything your PR needs.
           </p>
         </div>
