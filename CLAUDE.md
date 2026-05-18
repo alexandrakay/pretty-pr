@@ -72,14 +72,26 @@ The CLI calls the same API as the web app — it's a thin wrapper over the same 
 
 ---
 
+## Team Features (planned)
+
+PRetty is a personal tool today. These features make it a team tool:
+
+- **`.prettyrc` config** — team commits to repo, everyone gets same format/tone/structure. Tone settings: `formal`, `concise`, `detailed`.
+- **Custom templates** — teams define their own structure (Jira ticket numbers, motivation/approach/testing, etc.)
+- **GitHub Action** — runs PRetty on PR open, posts generated description if empty. Highest-leverage distribution feature — sticky in a way a CLI isn't.
+- **Reviewer summary mode** — paste a PR link or diff, get a plain-English brief before reviewing. Doubles the audience: authors write PRs with it, reviewers read PRs with it.
+- **Risk flag** — highlights diff areas most likely to need scrutiny. Not a linter, an AI second opinion on where to look.
+- **Slack summary** — posts a one-line AI-generated PR summary to team channel on PR open.
+- **PR score** — checklist completion indicator (has description? testing notes? changelog?). Soft standard, not a grade.
+- **Diff coverage hints** — flags gaps between the description and actual changes ("you mentioned auth but didn't explain the session timeout change").
+
 ## Stretch Goals (post-MVP)
 
-- GitHub integration (auto-open PR with generated copy)
-- `.prettyrc` config file (output format, tone, template customization)
 - npm publish
-- Changelog mode (generate full changelog from tag range)
+- Changelog mode (generate full changelog from tag range, `--mode changelog` flag)
 - Conventional commit cleanup
-- `--mode changelog` flag
+- GitHub repo connection (connect repo directly, no manual paste)
+- Save history / auth
 
 ---
 
