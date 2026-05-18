@@ -17,7 +17,7 @@ export default function HeroSection() {
           Try it free
         </a>
         <code className="rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
-          npx pretty-pr
+          npx @alexandrakay/pretty-pr
         </code>
       </div>
       <p className="text-xs text-text-muted">

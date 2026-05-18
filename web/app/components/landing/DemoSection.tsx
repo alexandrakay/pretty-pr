@@ -13,7 +13,7 @@ export default function DemoSection() {
         <GenerateForm />
         <p className="text-xs text-text-muted text-center">
           Looks good?{" "}
-          <code className="font-mono bg-surface px-1.5 py-0.5 rounded">npx pretty-pr</code>{" "}
+          <code className="font-mono bg-surface px-1.5 py-0.5 rounded">npx @alexandrakay/pretty-pr</code>{" "}
           does this from your terminal, reading directly from your git history.
         </p>
       </div>
