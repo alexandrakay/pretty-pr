@@ -1,6 +1,10 @@
 name: 'PRetty'
 description: 'Auto-generate PR descriptions from commits and post as a comment.'
 
+branding:
+  icon: 'git-pull-request'
+  color: 'purple'
+
 inputs:
   anthropic-api-key:
     description: 'Anthropic API key'
