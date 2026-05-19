@@ -7,7 +7,6 @@ import TwoWaysSection from "./components/landing/TwoWaysSection";
 import TeamsSection from "./components/landing/TeamsSection";
 import VibeCodingSection from "./components/landing/VibeCodingSection";
 import HowItWorksSection from "./components/landing/HowItWorksSection";
-import SocialProofSection from "./components/landing/SocialProofSection";
 import FinalCTASection from "./components/landing/FinalCTASection";
 
 export default function Home() {
@@ -23,8 +22,7 @@ export default function Home() {
         <TeamsSection />
         <VibeCodingSection />
         <HowItWorksSection />
-        <SocialProofSection />
-        <FinalCTASection />
+<FinalCTASection />
       </main>
       <footer className="border-t border-border px-6 py-6 text-center text-xs text-text-muted">
         P<span className="text-accent">R</span>etty — Week 3 of{" "}
