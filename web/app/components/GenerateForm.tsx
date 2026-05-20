@@ -1,9 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { parseOutput, SECTIONS, type ParsedOutput } from "@/app/lib/parseOutput";
 import OutputCard from "./OutputCard";
 import LoadingSkeleton from "./LoadingSkeleton";
+
+const HISTORY_KEY = "prettypr_history";
+const HISTORY_MAX = 10;
+
+interface HistoryEntry {
+  id: string;
+  timestamp: number;
+  commits: string;
+  branch: string;
+  diff: string;
+  output: string;
+  title: string;
+}
+
+function extractTitle(output: string): string {
+  const match = output.match(/## PR Title\s*\n([^\n]+)/);
+  if (match) return match[1].trim();
+  const firstLine = output.split("\n").find((l) => l.trim() && !l.startsWith("#"));
+  return firstLine?.trim() ?? "Untitled";
+}
+
+function formatRelativeTime(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function loadHistory(): HistoryEntry[] {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(entries: HistoryEntry[]) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, HISTORY_MAX)));
+}
 
 export default function GenerateForm() {
   const [commits, setCommits] = useState("");
@@ -12,6 +54,12 @@ export default function GenerateForm() {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    setHistory(loadHistory());
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,12 +87,28 @@ export default function GenerateForm() {
 
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
+      let accumulated = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        setOutput((prev) => prev + decoder.decode(value, { stream: true }));
+        const chunk = decoder.decode(value, { stream: true });
+        accumulated += chunk;
+        setOutput((prev) => prev + chunk);
       }
+
+      const entry: HistoryEntry = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        commits,
+        branch,
+        diff,
+        output: accumulated,
+        title: extractTitle(accumulated),
+      };
+      const updated = [entry, ...loadHistory()];
+      saveHistory(updated);
+      setHistory(updated.slice(0, HISTORY_MAX));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -52,14 +116,46 @@ export default function GenerateForm() {
     }
   }
 
+  function restoreEntry(entry: HistoryEntry) {
+    setCommits(entry.commits);
+    setBranch(entry.branch);
+    setDiff(entry.diff);
+    setOutput(entry.output);
+    setShowHistory(false);
+  }
+
   const parsed = parseOutput(output);
   const hasOutput = output.length > 0;
-
   const showSkeleton = loading && !hasOutput;
   const cards = SECTIONS.filter((s) => parsed[s]);
 
   return (
     <div className="flex flex-col gap-8">
+      {history.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={() => setShowHistory((v) => !v)}
+            className="text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+          >
+            History ({history.length})
+          </button>
+          {showHistory && (
+            <div className="absolute top-6 left-0 z-10 w-80 rounded-lg border border-border bg-surface shadow-lg py-1">
+              {history.map((entry) => (
+                <button
+                  key={entry.id}
+                  onClick={() => restoreEntry(entry)}
+                  className="w-full text-left px-4 py-2.5 hover:bg-surface-raised transition-colors flex flex-col gap-0.5"
+                >
+                  <span className="text-xs text-text-primary truncate">{entry.title}</span>
+                  <span className="text-xs text-text-muted">{formatRelativeTime(entry.timestamp)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="commits" className="text-sm font-medium text-text-muted uppercase tracking-wider">
