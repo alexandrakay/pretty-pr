@@ -12,6 +12,7 @@ export default function GenerateForm() {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
 
   async function runGenerate() {
     if (!commits.trim() || loading) return;
@@ -68,6 +69,16 @@ export default function GenerateForm() {
 
   const showSkeleton = loading && !hasOutput;
   const cards = SECTIONS.filter((s) => parsed[s]);
+
+  async function handleCopyAll() {
+    const markdown = SECTIONS
+      .filter((s) => parsed[s]?.trim())
+      .map((s) => `## ${s}\n\n${parsed[s]}`)
+      .join("\n\n---\n\n");
+    await navigator.clipboard.writeText(markdown);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 1500);
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -134,6 +145,14 @@ export default function GenerateForm() {
 
       {cards.length > 0 && (
         <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-end">
+            <button
+              onClick={handleCopyAll}
+              className="text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+            >
+              {copiedAll ? "Copied!" : "Copy all"}
+            </button>
+          </div>
           <PRScore parsed={parsed} loading={loading} />
           {cards.map((section) => (
             <div key={section} className="animate-fade-slide-in">
