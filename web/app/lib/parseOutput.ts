@@ -4,6 +4,7 @@ export const SECTIONS = [
   "Changelog Entry",
   "Reviewer Notes",
   "Testing Checklist",
+  "Risk Flag",
 ] as const;
 
 export type SectionName = (typeof SECTIONS)[number];

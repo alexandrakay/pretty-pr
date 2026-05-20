@@ -34,7 +34,10 @@ Respond with exactly this structure — no extra commentary:
 ## Testing Checklist
 - [ ] [item]
 - [ ] [item]
-[add as many as relevant]`;
+[add as many as relevant]
+
+## Risk Flag
+[List specific areas in this diff that warrant extra scrutiny. For each: name the area and one sentence on why it's risky — e.g. "auth middleware modified — verify token validation is unchanged". Be specific to this diff. If there are no meaningful risk areas, say "No significant risk areas identified."]`;
 }
 
 export const SYSTEM_PROMPT =
