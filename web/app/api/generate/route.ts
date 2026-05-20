@@ -10,13 +10,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "commits is required" }, { status: 400 });
   }
 
-  const { commits, branch } = body as { commits: string; branch?: string };
+  const { commits, branch, diff } = body as { commits: string; branch?: string; diff?: string };
 
   const stream = await client.messages.stream({
     model: "claude-opus-4-7",
-    max_tokens: 1024,
+    max_tokens: 1500,
     system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: buildPrompt({ commits, branch }) }],
+    messages: [{ role: "user", content: buildPrompt({ commits, branch, diff }) }],
   });
 
   const readable = new ReadableStream({
