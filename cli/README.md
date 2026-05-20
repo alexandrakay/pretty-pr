@@ -81,7 +81,7 @@ Drop a `.prettyrc` file in your repo root to set team-wide preferences:
 
 **Tone options:** `balanced` (default) · `concise` · `detailed` · `formal`
 
-Generate your `.prettyrc` at [prettypr.dev/config](https://prettypr.dev/config).
+Generate your `.prettyrc` at [pretty-pr.vercel.app/config](https://pretty-pr.vercel.app/config).
 
 prettypr reads `.prettyrc` automatically — no flags needed. Commit it to your repo and every teammate gets the same output format.
 
@@ -112,7 +112,7 @@ prettypr --full
 
 ## Web app
 
-Prefer the browser? Paste your commits at [prettypr.dev](https://prettypr.dev) — no install, no signup.
+Prefer the browser? Paste your commits at [pretty-pr.vercel.app](https://pretty-pr.vercel.app) — no install, no signup.
 
 ---
 
