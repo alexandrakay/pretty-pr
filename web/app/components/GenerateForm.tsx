@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { parseOutput, SECTIONS } from "@/app/lib/parseOutput";
+import { parseOutput, SECTIONS, type ParsedOutput } from "@/app/lib/parseOutput";
 import OutputCard from "./OutputCard";
 import LoadingSkeleton from "./LoadingSkeleton";
 
@@ -49,6 +49,7 @@ export default function GenerateForm() {
 
   const parsed = parseOutput(output);
   const hasOutput = output.length > 0;
+
   const showSkeleton = loading && !hasOutput;
   const cards = SECTIONS.filter((s) => parsed[s]);
 
@@ -102,6 +103,7 @@ export default function GenerateForm() {
 
       {cards.length > 0 && (
         <div className="flex flex-col gap-4">
+          <PRScore parsed={parsed} loading={loading} />
           {cards.map((section) => (
             <div key={section} className="animate-fade-slide-in">
               <OutputCard title={section} content={parsed[section]!} />
@@ -109,6 +111,43 @@ export default function GenerateForm() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+const SCORE_CRITERIA: { label: string; key: keyof ParsedOutput }[] = [
+  { label: "PR Title", key: "PR Title" },
+  { label: "Description (what/why/how)", key: "PR Description" },
+  { label: "Changelog entry", key: "Changelog Entry" },
+  { label: "Reviewer notes", key: "Reviewer Notes" },
+  { label: "Testing checklist", key: "Testing Checklist" },
+  { label: "Risk flag", key: "Risk Flag" },
+];
+
+function PRScore({ parsed, loading }: { parsed: ParsedOutput; loading: boolean }) {
+  const met = SCORE_CRITERIA.filter((c) => parsed[c.key]?.trim()).length;
+  const total = SCORE_CRITERIA.length;
+  const complete = met === total;
+
+  return (
+    <div className="rounded-lg border border-border bg-surface px-5 py-4 flex flex-col gap-3 animate-fade-slide-in">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">PR quality</span>
+        <span className={`text-xs font-semibold ${complete ? "text-green-400" : "text-text-muted"}`}>
+          {loading ? "..." : `${met}/${total}`}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-x-6 gap-y-1.5">
+        {SCORE_CRITERIA.map((c) => {
+          const done = Boolean(parsed[c.key]?.trim());
+          return (
+            <span key={c.key} className={`flex items-center gap-1.5 text-xs ${done ? "text-text-primary" : "text-text-muted opacity-50"}`}>
+              <span className={`text-sm ${done ? "text-green-400" : ""}`}>{done ? "✓" : "○"}</span>
+              {c.label}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }
