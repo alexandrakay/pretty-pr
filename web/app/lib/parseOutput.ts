@@ -5,6 +5,7 @@ export const SECTIONS = [
   "Reviewer Notes",
   "Testing Checklist",
   "Risk Flag",
+  "Coverage Gaps",
 ] as const;
 
 export type SectionName = (typeof SECTIONS)[number];

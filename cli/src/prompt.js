@@ -45,5 +45,8 @@ Respond with exactly this structure — no extra commentary:
 [add as many as relevant]
 
 ## Risk Flag
-[List specific areas in this diff that warrant extra scrutiny. For each: name the area and one sentence on why it's risky — e.g. "auth middleware modified — verify token validation is unchanged". Be specific to this diff. If there are no meaningful risk areas, say "No significant risk areas identified."]`
+[List specific areas in this diff that warrant extra scrutiny. For each: name the area and one sentence on why it's risky — e.g. "auth middleware modified — verify token validation is unchanged". Be specific to this diff. If there are no meaningful risk areas, say "No significant risk areas identified."]${diff ? `
+
+## Coverage Gaps
+[Review the diff above against the PR Description and Changelog you just wrote. List any significant changes in the diff that your description does NOT explain — be specific about what was changed and why it matters. If everything is covered, write exactly: "Description covers all significant changes."]` : ''}`
 }

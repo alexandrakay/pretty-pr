@@ -8,6 +8,7 @@ import LoadingSkeleton from "./LoadingSkeleton";
 export default function GenerateForm() {
   const [commits, setCommits] = useState("");
   const [branch, setBranch] = useState("");
+  const [diff, setDiff] = useState("");
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,11 @@ export default function GenerateForm() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commits, branch: branch.trim() || undefined }),
+        body: JSON.stringify({
+          commits,
+          branch: branch.trim() || undefined,
+          diff: diff.trim() || undefined,
+        }),
       });
 
       if (!res.ok) {
@@ -83,6 +88,21 @@ export default function GenerateForm() {
             onChange={(e) => setBranch(e.target.value)}
             placeholder="e.g. feature/user-auth"
             className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm text-text-primary placeholder:text-text-muted font-mono focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="diff" className="text-sm font-medium text-text-muted uppercase tracking-wider">
+            Diff <span className="normal-case text-text-muted">(optional — enables coverage gap detection)</span>
+          </label>
+          <textarea
+            id="diff"
+            name="diff"
+            rows={6}
+            value={diff}
+            onChange={(e) => setDiff(e.target.value)}
+            placeholder={"Paste your git diff output here...\n\ne.g. git diff main...HEAD"}
+            className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm text-text-primary placeholder:text-text-muted font-mono resize-y focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
           />
         </div>
 
