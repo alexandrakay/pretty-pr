@@ -8,9 +8,13 @@ const {
   GITHUB_TOKEN,
   PR_NUMBER,
   PR_BODY = '',
+  PR_TITLE = '',
+  PR_URL = '',
+  PR_AUTHOR = '',
   BASE_REF,
   HEAD_REF,
   REPO,
+  SLACK_WEBHOOK_URL = '',
 } = process.env
 
 if (!ANTHROPIC_API_KEY) {
@@ -97,6 +101,26 @@ ${output}
 <sub>Re-run by editing the PR description or closing and reopening the PR.</sub>`
 }
 
+function extractOneLiner(output) {
+  const match = output.match(/\*\*What changed:\*\*\s*([^\n]+)/)
+  if (match) return match[1].trim()
+  const firstLine = output.split('\n').find((l) => l.trim() && !l.startsWith('#'))
+  return firstLine?.trim() || 'A new PR was opened.'
+}
+
+async function postSlack(summary) {
+  const text = `*<${PR_URL}|${PR_TITLE || 'New PR'}>* by \`${PR_AUTHOR}\`\n${summary}`
+  const res = await fetch(SLACK_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    console.error(`Slack post failed: ${res.status} ${body}`)
+  }
+}
+
 async function postComment(body) {
   const [owner, repoName] = REPO.split('/')
   const url = `https://api.github.com/repos/${owner}/${repoName}/issues/${PR_NUMBER}/comments`
@@ -147,3 +171,9 @@ const commentBody = formatComment(output)
 const commentUrl = await postComment(commentBody)
 
 console.log(`Posted: ${commentUrl}`)
+
+if (SLACK_WEBHOOK_URL) {
+  const summary = extractOneLiner(output)
+  await postSlack(summary)
+  console.log('Slack summary posted.')
+}
