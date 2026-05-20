@@ -13,9 +13,8 @@ export default function GenerateForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!commits.trim()) return;
+  async function runGenerate() {
+    if (!commits.trim() || loading) return;
 
     setOutput("");
     setError(null);
@@ -52,6 +51,18 @@ export default function GenerateForm() {
     }
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    runGenerate();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      runGenerate();
+    }
+  }
+
   const parsed = parseOutput(output);
   const hasOutput = output.length > 0;
 
@@ -60,7 +71,7 @@ export default function GenerateForm() {
 
   return (
     <div className="flex flex-col gap-8">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="commits" className="text-sm font-medium text-text-muted uppercase tracking-wider">
             Commits
