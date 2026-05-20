@@ -66,7 +66,7 @@ Or add `ANTHROPIC_API_KEY` to your `.env`.
 
 ## Web app
 
-Paste commits into [pretty-pr.vercel.app](https://pretty-pr.vercel.app) and get the same output in your browser. No install, no auth.
+Paste commits into [pretty-pr.com](https://pretty-pr.com) and get the same output in your browser. No install, no auth.
 
 ---
 
