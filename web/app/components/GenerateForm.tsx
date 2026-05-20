@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { parseOutput, SECTIONS, type ParsedOutput } from "@/app/lib/parseOutput";
 import OutputCard from "./OutputCard";
 import LoadingSkeleton from "./LoadingSkeleton";
@@ -12,6 +12,27 @@ export default function GenerateForm() {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCommits(localStorage.getItem("prettypr_commits") ?? "");
+    setBranch(localStorage.getItem("prettypr_branch") ?? "");
+    setDiff(localStorage.getItem("prettypr_diff") ?? "");
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => localStorage.setItem("prettypr_commits", commits), 300);
+    return () => clearTimeout(t);
+  }, [commits]);
+
+  useEffect(() => {
+    const t = setTimeout(() => localStorage.setItem("prettypr_branch", branch), 300);
+    return () => clearTimeout(t);
+  }, [branch]);
+
+  useEffect(() => {
+    const t = setTimeout(() => localStorage.setItem("prettypr_diff", diff), 300);
+    return () => clearTimeout(t);
+  }, [diff]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
