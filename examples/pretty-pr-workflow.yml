@@ -21,3 +21,4 @@ jobs:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           post-if-empty: 'true'   # only post when PR description is blank
           mode: diff              # commits | diff | full
+          # slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}  # optional
