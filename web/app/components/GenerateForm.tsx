@@ -14,6 +14,11 @@ const HISTORY_KEY = "prettypr_history";
 const HISTORY_MAX = 10;
 const PREFS_KEY = "prettypr_preferences";
 
+interface GitHubUser {
+  username: string;
+  avatar: string;
+}
+
 const TONE_OPTIONS = [
   { value: "balanced", label: "Balanced" },
   { value: "concise", label: "Concise" },
@@ -97,6 +102,8 @@ export default function GenerateForm() {
   const [copiedShare, setCopiedShare] = useState(false);
   const [shareTooLarge, setShareTooLarge] = useState(false);
   const [showGitHub, setShowGitHub] = useState(false);
+  const [ghUser, setGhUser] = useState<GitHubUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -113,6 +120,15 @@ export default function GenerateForm() {
     setDiff(localStorage.getItem("prettypr_diff") ?? "");
     setHistory(loadHistory());
     setPreferences(loadPreferences());
+
+    fetch("/api/auth/status")
+      .then((r) => r.json())
+      .then((data: { authenticated: boolean; username?: string; avatar?: string }) => {
+        if (data.authenticated && data.username && data.avatar) {
+          setGhUser({ username: data.username, avatar: data.avatar });
+        }
+      })
+      .finally(() => setAuthChecked(true));
   }, []);
 
   useEffect(() => {
@@ -279,6 +295,8 @@ export default function GenerateForm() {
       <GitHubImport
         open={showGitHub}
         onToggle={() => setShowGitHub((v) => !v)}
+        ghUser={ghUser}
+        authChecked={authChecked}
         onImport={(data) => {
           setCommits(data.commits);
           setDiff(data.diff);
@@ -435,7 +453,7 @@ export default function GenerateForm() {
             </div>
           ))}
           {parsed["PR Title"] && parsed["PR Description"] && (
-            <FillPR title={parsed["PR Title"]!} description={parsed["PR Description"]!} />
+            <FillPR title={parsed["PR Title"]!} description={parsed["PR Description"]!} ghUser={ghUser} />
           )}
         </div>
       )}
@@ -447,10 +465,11 @@ interface GitHubImportProps {
   open: boolean;
   onToggle: () => void;
   onImport: (data: { commits: string; diff: string; head: string }) => void;
+  ghUser: GitHubUser | null;
+  authChecked: boolean;
 }
 
-function GitHubImport({ open, onToggle, onImport }: GitHubImportProps) {
-  const [token, setToken] = useState("");
+function GitHubImport({ open, onToggle, onImport, ghUser, authChecked }: GitHubImportProps) {
   const [repos, setRepos] = useState<Array<{ fullName: string; defaultBranch: string }>>([]);
   const [selectedRepo, setSelectedRepo] = useState("");
   const [branches, setBranches] = useState<string[]>([]);
@@ -460,13 +479,15 @@ function GitHubImport({ open, onToggle, onImport }: GitHubImportProps) {
   const [status, setStatus] = useState<"idle" | "loading-repos" | "loading-branches" | "importing" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
+  useEffect(() => {
+    if (ghUser && open && repos.length === 0) loadRepos();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ghUser, open]);
+
   async function loadRepos() {
-    if (!token.trim()) return;
     setStatus("loading-repos");
     setErrorMsg("");
-    const res = await fetch("/api/github/repos", {
-      headers: { "x-github-token": token },
-    });
+    const res = await fetch("/api/github/repos");
     const data = await res.json();
     if (!res.ok) {
       setStatus("error");
@@ -485,9 +506,7 @@ function GitHubImport({ open, onToggle, onImport }: GitHubImportProps) {
     if (!fullName) return;
     setStatus("loading-branches");
     setErrorMsg("");
-    const res = await fetch(`/api/github/branches?repo=${encodeURIComponent(fullName)}`, {
-      headers: { "x-github-token": token },
-    });
+    const res = await fetch(`/api/github/branches?repo=${encodeURIComponent(fullName)}`);
     const data = await res.json();
     if (!res.ok) {
       setStatus("error");
@@ -505,9 +524,7 @@ function GitHubImport({ open, onToggle, onImport }: GitHubImportProps) {
     setStatus("importing");
     setErrorMsg("");
     const params = new URLSearchParams({ repo: selectedRepo, base, head });
-    const res = await fetch(`/api/github/compare?${params}`, {
-      headers: { "x-github-token": token },
-    });
+    const res = await fetch(`/api/github/compare?${params}`);
     const data = await res.json();
     if (!res.ok) {
       setStatus("error");
@@ -535,88 +552,103 @@ function GitHubImport({ open, onToggle, onImport }: GitHubImportProps) {
 
       {open && (
         <div className="flex flex-col gap-3 pt-1">
-          <p className="text-xs text-text-muted leading-relaxed">
-            Enter a GitHub Personal Access Token with <code className="text-text-primary">repo</code> scope to auto-fetch commits and diff.
-          </p>
-
-          <div className="flex gap-2">
-            <input
-              type="password"
-              placeholder="GitHub Personal Access Token"
-              value={token}
-              onChange={(e) => { setToken(e.target.value); setRepos([]); setSelectedRepo(""); }}
-              className="flex-1 rounded border border-border bg-background px-3 py-2 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-            <button
-              type="button"
-              onClick={loadRepos}
-              disabled={!token.trim() || status === "loading-repos"}
-              className="rounded border border-border bg-surface px-3 py-2 text-xs font-medium text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
-            >
-              {status === "loading-repos" ? "Loading..." : "Connect"}
-            </button>
-          </div>
-
-          {repos.length > 0 && (
-            <>
-              <input
-                type="text"
-                placeholder="Search repos..."
-                value={repoFilter}
-                onChange={(e) => setRepoFilter(e.target.value)}
-                className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
-              />
-              <select
-                value={selectedRepo}
-                onChange={(e) => handleRepoSelect(e.target.value)}
-                disabled={status === "loading-branches"}
-                className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
-              >
-                <option value="">— select a repo —</option>
-                {filteredRepos.map((r) => (
-                  <option key={r.fullName} value={r.fullName}>{r.fullName}</option>
-                ))}
-              </select>
-            </>
+          {!authChecked && (
+            <p className="text-xs text-text-muted">Checking authentication...</p>
           )}
 
-          {branches.length > 0 && (
-            <div className="flex gap-2">
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-xs text-text-muted">Base</label>
-                <select
-                  value={base}
-                  onChange={(e) => setBase(e.target.value)}
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-                >
-                  {branches.map((b) => <option key={b} value={b}>{b}</option>)}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1 flex-1">
-                <label className="text-xs text-text-muted">Compare</label>
-                <select
-                  value={head}
-                  onChange={(e) => setHead(e.target.value)}
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-                >
-                  <option value="">— select branch —</option>
-                  {branches.map((b) => <option key={b} value={b}>{b}</option>)}
-                </select>
-              </div>
+          {authChecked && !ghUser && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-text-muted leading-relaxed">
+                Connect your GitHub account to auto-fetch commits and diff from any of your repos.
+              </p>
+              <a
+                href="/api/auth/github"
+                className="self-start flex items-center gap-2 rounded bg-accent hover:bg-accent-hover px-4 py-2 text-xs font-semibold text-white transition-colors"
+              >
+                Connect with GitHub
+              </a>
             </div>
           )}
 
-          {status === "error" && <p className="text-xs text-red-400">{errorMsg}</p>}
+          {authChecked && ghUser && (
+            <>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ghUser.avatar} alt={ghUser.username} className="w-5 h-5 rounded-full" />
+                  <span className="text-xs text-text-primary font-medium">{ghUser.username}</span>
+                </div>
+                <form action="/api/auth/signout" method="POST">
+                  <button type="submit" className="text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer">
+                    Disconnect
+                  </button>
+                </form>
+              </div>
 
-          {branches.length > 0 && (
-            <button
-              type="button"
-              onClick={handleImport}
-              disabled={!base || !head || status === "importing"}
-              className="self-start rounded bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
-            >
-              {status === "importing" ? "Importing..." : "Import commits & diff"}
-            </button>
+              {status === "loading-repos" && <p className="text-xs text-text-muted">Loading repos...</p>}
+
+              {repos.length > 0 && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search repos..."
+                    value={repoFilter}
+                    onChange={(e) => setRepoFilter(e.target.value)}
+                    className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  <select
+                    value={selectedRepo}
+                    onChange={(e) => handleRepoSelect(e.target.value)}
+                    disabled={status === "loading-branches"}
+                    className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
+                  >
+                    <option value="">— select a repo —</option>
+                    {filteredRepos.map((r) => (
+                      <option key={r.fullName} value={r.fullName}>{r.fullName}</option>
+                    ))}
+                  </select>
+                </>
+              )}
+
+              {branches.length > 0 && (
+                <div className="flex gap-2">
+                  <div className="flex flex-col gap-1 flex-1">
+                    <label className="text-xs text-text-muted">Base</label>
+                    <select
+                      value={base}
+                      onChange={(e) => setBase(e.target.value)}
+                      className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                      {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1 flex-1">
+                    <label className="text-xs text-text-muted">Compare</label>
+                    <select
+                      value={head}
+                      onChange={(e) => setHead(e.target.value)}
+                      className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                      <option value="">— select branch —</option>
+                      {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {status === "error" && <p className="text-xs text-red-400">{errorMsg}</p>}
+
+              {branches.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleImport}
+                  disabled={!base || !head || status === "importing"}
+                  className="self-start rounded bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
+                >
+                  {status === "importing" ? "Importing..." : "Import commits & diff"}
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
@@ -661,10 +693,10 @@ function PRScore({ parsed, loading }: { parsed: ParsedOutput; loading: boolean }
   );
 }
 
-function FillPR({ title, description }: { title: string; description: string }) {
+function FillPR({ title, description, ghUser }: { title: string; description: string; ghUser: GitHubUser | null }) {
   const [open, setOpen] = useState(false);
   const [prUrl, setPrUrl] = useState("");
-  const [token, setToken] = useState("");
+  const [patToken, setPatToken] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [prLink, setPrLink] = useState("");
@@ -676,7 +708,7 @@ function FillPR({ title, description }: { title: string; description: string }) 
       const res = await fetch("/api/fill-pr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prUrl, token, title, description }),
+        body: JSON.stringify({ prUrl, title, description, patToken: patToken || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -692,6 +724,8 @@ function FillPR({ title, description }: { title: string; description: string }) 
     }
   }
 
+  const canFill = prUrl.trim() && (ghUser || patToken.trim());
+
   return (
     <div className="rounded-lg border border-border bg-surface px-5 py-4 flex flex-col gap-3 animate-fade-slide-in">
       <button
@@ -705,9 +739,15 @@ function FillPR({ title, description }: { title: string; description: string }) 
 
       {open && (
         <div className="flex flex-col gap-3 pt-1">
-          <p className="text-xs text-text-muted leading-relaxed">
-            Paste a GitHub PR URL and your Personal Access Token to update the PR title and description in one click. Your token is never stored.
-          </p>
+          {ghUser ? (
+            <p className="text-xs text-text-muted leading-relaxed">
+              Signed in as <span className="text-text-primary font-medium">{ghUser.username}</span>. Paste a PR URL to update its title and description.
+            </p>
+          ) : (
+            <p className="text-xs text-text-muted leading-relaxed">
+              Connect GitHub above for one-click fill, or paste a Personal Access Token with <code className="text-text-primary">repo</code> scope.
+            </p>
+          )}
           <input
             type="url"
             placeholder="https://github.com/owner/repo/pull/123"
@@ -715,13 +755,15 @@ function FillPR({ title, description }: { title: string; description: string }) 
             onChange={(e) => setPrUrl(e.target.value)}
             className="w-full rounded border border-border bg-background px-3 py-2 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
           />
-          <input
-            type="password"
-            placeholder="GitHub Personal Access Token (repo scope)"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            className="w-full rounded border border-border bg-background px-3 py-2 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
-          />
+          {!ghUser && (
+            <input
+              type="password"
+              placeholder="GitHub Personal Access Token (repo scope)"
+              value={patToken}
+              onChange={(e) => setPatToken(e.target.value)}
+              className="w-full rounded border border-border bg-background px-3 py-2 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+          )}
           {status === "error" && <p className="text-xs text-red-400">{errorMsg}</p>}
           {status === "success" && (
             <p className="text-xs text-green-400">
@@ -734,7 +776,7 @@ function FillPR({ title, description }: { title: string; description: string }) 
           <button
             type="button"
             onClick={handleFill}
-            disabled={!prUrl.trim() || !token.trim() || status === "loading"}
+            disabled={!canFill || status === "loading"}
             className="self-start rounded bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
           >
             {status === "loading" ? "Filling..." : "Fill PR"}

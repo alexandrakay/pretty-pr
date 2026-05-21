@@ -1,3 +1,5 @@
+import { getGitHubToken } from "@/app/lib/auth";
+
 const PR_URL_RE = /github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/;
 
 function parsePrUrl(url: string): { owner: string; repo: string; number: number } | null {
@@ -9,16 +11,22 @@ function parsePrUrl(url: string): { owner: string; repo: string; number: number 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
 
-  if (!body?.prUrl || !body?.token || !body?.title || !body?.description) {
-    return Response.json({ error: "prUrl, token, title, and description are required" }, { status: 400 });
+  if (!body?.prUrl || !body?.title || !body?.description) {
+    return Response.json({ error: "prUrl, title, and description are required" }, { status: 400 });
   }
 
-  const { prUrl, token, title, description } = body as {
+  const { prUrl, title, description, patToken } = body as {
     prUrl: string;
-    token: string;
     title: string;
     description: string;
+    patToken?: string;
   };
+
+  // Prefer OAuth cookie token; fall back to a PAT provided in the request body
+  const token = getGitHubToken(request) ?? patToken;
+  if (!token) {
+    return Response.json({ error: "Not authenticated — connect GitHub or provide a token" }, { status: 401 });
+  }
 
   const parsed = parsePrUrl(prUrl);
   if (!parsed) {

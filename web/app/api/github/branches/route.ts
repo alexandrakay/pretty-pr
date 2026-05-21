@@ -1,9 +1,11 @@
+import { getGitHubToken } from "@/app/lib/auth";
+
 export async function GET(request: Request) {
-  const token = request.headers.get("x-github-token");
+  const token = getGitHubToken(request);
   const { searchParams } = new URL(request.url);
   const repo = searchParams.get("repo");
 
-  if (!token) return Response.json({ error: "Missing token" }, { status: 401 });
+  if (!token) return Response.json({ error: "Not authenticated" }, { status: 401 });
   if (!repo) return Response.json({ error: "Missing repo" }, { status: 400 });
 
   const res = await fetch(
