@@ -531,6 +531,11 @@ function GitHubImport({ open, onToggle, onImport, ghUser, authChecked }: GitHubI
       setErrorMsg(data.error ?? "Failed to fetch compare");
       return;
     }
+    if (!data.commits && !data.diff) {
+      setStatus("error");
+      setErrorMsg(`No commits found between ${base} and ${head}. This branch may already be merged.`);
+      return;
+    }
     setStatus("idle");
     onImport({ commits: data.commits, diff: data.diff, head });
   }
