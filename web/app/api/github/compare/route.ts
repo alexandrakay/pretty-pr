@@ -1,3 +1,5 @@
+import { getGitHubToken } from "@/app/lib/auth";
+
 const DIFF_MAX_CHARS = 6000;
 
 function formatCommits(commits: Array<{ sha: string; commit: { message: string; author: { name: string; date: string } } }>): string {
@@ -15,13 +17,13 @@ function formatCommits(commits: Array<{ sha: string; commit: { message: string; 
 }
 
 export async function GET(request: Request) {
-  const token = request.headers.get("x-github-token");
+  const token = getGitHubToken(request);
   const { searchParams } = new URL(request.url);
   const repo = searchParams.get("repo");
   const base = searchParams.get("base");
   const head = searchParams.get("head");
 
-  if (!token) return Response.json({ error: "Missing token" }, { status: 401 });
+  if (!token) return Response.json({ error: "Not authenticated" }, { status: 401 });
   if (!repo || !base || !head) return Response.json({ error: "Missing repo, base, or head" }, { status: 400 });
 
   const res = await fetch(
@@ -40,11 +42,9 @@ export async function GET(request: Request) {
     return Response.json({ error: text || `GitHub error (${res.status})` }, { status: res.status });
   }
 
-  // We requested diff format — get the raw diff text
   const rawDiff = await res.text();
   const diff = rawDiff.length > DIFF_MAX_CHARS ? rawDiff.slice(0, DIFF_MAX_CHARS) + "\n\n[diff truncated]" : rawDiff;
 
-  // Fetch JSON separately for commits
   const jsonRes = await fetch(
     `https://api.github.com/repos/${repo}/compare/${base}...${head}`,
     {
