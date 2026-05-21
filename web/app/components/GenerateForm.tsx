@@ -96,6 +96,7 @@ export default function GenerateForm() {
   const [showSettings, setShowSettings] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [shareTooLarge, setShareTooLarge] = useState(false);
+  const [showGitHub, setShowGitHub] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -275,6 +276,17 @@ export default function GenerateForm() {
         </div>
       )}
 
+      <GitHubImport
+        open={showGitHub}
+        onToggle={() => setShowGitHub((v) => !v)}
+        onImport={(data) => {
+          setCommits(data.commits);
+          setDiff(data.diff);
+          setBranch(data.head);
+          setShowGitHub(false);
+        }}
+      />
+
       <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="commits" className="text-sm font-medium text-text-muted uppercase tracking-wider">
@@ -424,6 +436,187 @@ export default function GenerateForm() {
           ))}
           {parsed["PR Title"] && parsed["PR Description"] && (
             <FillPR title={parsed["PR Title"]!} description={parsed["PR Description"]!} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface GitHubImportProps {
+  open: boolean;
+  onToggle: () => void;
+  onImport: (data: { commits: string; diff: string; head: string }) => void;
+}
+
+function GitHubImport({ open, onToggle, onImport }: GitHubImportProps) {
+  const [token, setToken] = useState("");
+  const [repos, setRepos] = useState<Array<{ fullName: string; defaultBranch: string }>>([]);
+  const [selectedRepo, setSelectedRepo] = useState("");
+  const [branches, setBranches] = useState<string[]>([]);
+  const [base, setBase] = useState("");
+  const [head, setHead] = useState("");
+  const [repoFilter, setRepoFilter] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading-repos" | "loading-branches" | "importing" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  async function loadRepos() {
+    if (!token.trim()) return;
+    setStatus("loading-repos");
+    setErrorMsg("");
+    const res = await fetch("/api/github/repos", {
+      headers: { "x-github-token": token },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus("error");
+      setErrorMsg(data.error ?? "Failed to load repos");
+      return;
+    }
+    setRepos(data);
+    setStatus("idle");
+  }
+
+  async function handleRepoSelect(fullName: string) {
+    setSelectedRepo(fullName);
+    setBranches([]);
+    setBase("");
+    setHead("");
+    if (!fullName) return;
+    setStatus("loading-branches");
+    setErrorMsg("");
+    const res = await fetch(`/api/github/branches?repo=${encodeURIComponent(fullName)}`, {
+      headers: { "x-github-token": token },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus("error");
+      setErrorMsg(data.error ?? "Failed to load branches");
+      return;
+    }
+    setBranches(data);
+    const repo = repos.find((r) => r.fullName === fullName);
+    if (repo) setBase(repo.defaultBranch);
+    setStatus("idle");
+  }
+
+  async function handleImport() {
+    if (!selectedRepo || !base || !head) return;
+    setStatus("importing");
+    setErrorMsg("");
+    const params = new URLSearchParams({ repo: selectedRepo, base, head });
+    const res = await fetch(`/api/github/compare?${params}`, {
+      headers: { "x-github-token": token },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus("error");
+      setErrorMsg(data.error ?? "Failed to fetch compare");
+      return;
+    }
+    setStatus("idle");
+    onImport({ commits: data.commits, diff: data.diff, head });
+  }
+
+  const filteredRepos = repos.filter((r) =>
+    r.fullName.toLowerCase().includes(repoFilter.toLowerCase())
+  );
+
+  return (
+    <div className="rounded-lg border border-border bg-surface px-5 py-4 flex flex-col gap-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center justify-between w-full text-left"
+      >
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Import from GitHub</span>
+        <span className="text-xs text-text-muted">{open ? "▾" : "▸"}</span>
+      </button>
+
+      {open && (
+        <div className="flex flex-col gap-3 pt-1">
+          <p className="text-xs text-text-muted leading-relaxed">
+            Enter a GitHub Personal Access Token with <code className="text-text-primary">repo</code> scope to auto-fetch commits and diff.
+          </p>
+
+          <div className="flex gap-2">
+            <input
+              type="password"
+              placeholder="GitHub Personal Access Token"
+              value={token}
+              onChange={(e) => { setToken(e.target.value); setRepos([]); setSelectedRepo(""); }}
+              className="flex-1 rounded border border-border bg-background px-3 py-2 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+            <button
+              type="button"
+              onClick={loadRepos}
+              disabled={!token.trim() || status === "loading-repos"}
+              className="rounded border border-border bg-surface px-3 py-2 text-xs font-medium text-text-muted hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
+            >
+              {status === "loading-repos" ? "Loading..." : "Connect"}
+            </button>
+          </div>
+
+          {repos.length > 0 && (
+            <>
+              <input
+                type="text"
+                placeholder="Search repos..."
+                value={repoFilter}
+                onChange={(e) => setRepoFilter(e.target.value)}
+                className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              <select
+                value={selectedRepo}
+                onChange={(e) => handleRepoSelect(e.target.value)}
+                disabled={status === "loading-branches"}
+                className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
+              >
+                <option value="">— select a repo —</option>
+                {filteredRepos.map((r) => (
+                  <option key={r.fullName} value={r.fullName}>{r.fullName}</option>
+                ))}
+              </select>
+            </>
+          )}
+
+          {branches.length > 0 && (
+            <div className="flex gap-2">
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-xs text-text-muted">Base</label>
+                <select
+                  value={base}
+                  onChange={(e) => setBase(e.target.value)}
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                  {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-xs text-text-muted">Compare</label>
+                <select
+                  value={head}
+                  onChange={(e) => setHead(e.target.value)}
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                  <option value="">— select branch —</option>
+                  {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {status === "error" && <p className="text-xs text-red-400">{errorMsg}</p>}
+
+          {branches.length > 0 && (
+            <button
+              type="button"
+              onClick={handleImport}
+              disabled={!base || !head || status === "importing"}
+              className="self-start rounded bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
+            >
+              {status === "importing" ? "Importing..." : "Import commits & diff"}
+            </button>
           )}
         </div>
       )}
