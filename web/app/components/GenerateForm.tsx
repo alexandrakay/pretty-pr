@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import LZString from "lz-string";
 import { parseOutput, SECTIONS, type ParsedOutput } from "@/app/lib/parseOutput";
 import { DEFAULT_PREFERENCES, type Preferences } from "@/app/lib/prompt";
 import OutputCard from "./OutputCard";
 import LoadingSkeleton from "./LoadingSkeleton";
+
+const SHARE_PARAM = "o";
+const SHARE_MAX_URL_LENGTH = 8000;
 
 const HISTORY_KEY = "prettypr_history";
 const HISTORY_MAX = 10;
@@ -90,8 +94,19 @@ export default function GenerateForm() {
   const [showHistory, setShowHistory] = useState(false);
   const [preferences, setPreferences] = useState<Preferences>(DEFAULT_PREFERENCES);
   const [showSettings, setShowSettings] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
+  const [shareTooLarge, setShareTooLarge] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shared = params.get(SHARE_PARAM);
+    if (shared) {
+      const decompressed = LZString.decompressFromEncodedURIComponent(shared);
+      if (decompressed) {
+        setOutput(decompressed);
+        return;
+      }
+    }
     setCommits(localStorage.getItem("prettypr_commits") ?? "");
     setBranch(localStorage.getItem("prettypr_branch") ?? "");
     setDiff(localStorage.getItem("prettypr_diff") ?? "");
@@ -208,6 +223,20 @@ export default function GenerateForm() {
   const hasOutput = output.length > 0;
   const showSkeleton = loading && !hasOutput;
   const cards = SECTIONS.filter((s) => parsed[s]);
+
+  async function handleShare() {
+    setShareTooLarge(false);
+    const compressed = LZString.compressToEncodedURIComponent(output);
+    const url = `${window.location.origin}/app?${SHARE_PARAM}=${compressed}`;
+    if (url.length > SHARE_MAX_URL_LENGTH) {
+      setShareTooLarge(true);
+      return;
+    }
+    window.history.replaceState(null, "", `?${SHARE_PARAM}=${compressed}`);
+    await navigator.clipboard.writeText(url);
+    setCopiedShare(true);
+    setTimeout(() => setCopiedShare(false), 1500);
+  }
 
   async function handleCopyAll() {
     const markdown = SECTIONS
@@ -370,7 +399,16 @@ export default function GenerateForm() {
 
       {cards.length > 0 && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-4">
+            {shareTooLarge && (
+              <span className="text-xs text-red-400">Output too large to share via URL</span>
+            )}
+            <button
+              onClick={handleShare}
+              className="text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+            >
+              {copiedShare ? "Link copied!" : "Share"}
+            </button>
             <button
               onClick={handleCopyAll}
               className="text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
