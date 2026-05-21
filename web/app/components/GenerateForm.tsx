@@ -2,11 +2,28 @@
 
 import { useState, useEffect } from "react";
 import { parseOutput, SECTIONS, type ParsedOutput } from "@/app/lib/parseOutput";
+import { DEFAULT_PREFERENCES, type Preferences } from "@/app/lib/prompt";
 import OutputCard from "./OutputCard";
 import LoadingSkeleton from "./LoadingSkeleton";
 
 const HISTORY_KEY = "prettypr_history";
 const HISTORY_MAX = 10;
+const PREFS_KEY = "prettypr_preferences";
+
+const TONE_OPTIONS = [
+  { value: "balanced", label: "Balanced" },
+  { value: "concise", label: "Concise" },
+  { value: "detailed", label: "Detailed" },
+  { value: "formal", label: "Formal" },
+] as const;
+
+const SECTION_OPTIONS = [
+  { id: "title", label: "PR Title" },
+  { id: "description", label: "PR Description" },
+  { id: "changelog", label: "Changelog" },
+  { id: "reviewer-notes", label: "Reviewer Notes" },
+  { id: "testing-checklist", label: "Testing Checklist" },
+];
 
 interface HistoryEntry {
   id: string;
@@ -47,6 +64,20 @@ function saveHistory(entries: HistoryEntry[]) {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, HISTORY_MAX)));
 }
 
+function loadPreferences(): Preferences {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (!raw) return DEFAULT_PREFERENCES;
+    const parsed = JSON.parse(raw);
+    return {
+      tone: parsed.tone ?? DEFAULT_PREFERENCES.tone,
+      sections: Array.isArray(parsed.sections) ? parsed.sections : DEFAULT_PREFERENCES.sections,
+    };
+  } catch {
+    return DEFAULT_PREFERENCES;
+  }
+}
+
 export default function GenerateForm() {
   const [commits, setCommits] = useState("");
   const [branch, setBranch] = useState("");
@@ -57,12 +88,15 @@ export default function GenerateForm() {
   const [copiedAll, setCopiedAll] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [preferences, setPreferences] = useState<Preferences>(DEFAULT_PREFERENCES);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     setCommits(localStorage.getItem("prettypr_commits") ?? "");
     setBranch(localStorage.getItem("prettypr_branch") ?? "");
     setDiff(localStorage.getItem("prettypr_diff") ?? "");
     setHistory(loadHistory());
+    setPreferences(loadPreferences());
   }, []);
 
   useEffect(() => {
@@ -80,6 +114,21 @@ export default function GenerateForm() {
     return () => clearTimeout(t);
   }, [diff]);
 
+  function updatePreferences(update: Partial<Preferences>) {
+    setPreferences((prev) => {
+      const next = { ...prev, ...update };
+      localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function toggleSection(id: string) {
+    const next = preferences.sections.includes(id)
+      ? preferences.sections.filter((s) => s !== id)
+      : [...preferences.sections, id];
+    updatePreferences({ sections: next });
+  }
+
   async function runGenerate() {
     if (!commits.trim() || loading) return;
 
@@ -95,6 +144,7 @@ export default function GenerateForm() {
           commits,
           branch: branch.trim() || undefined,
           diff: diff.trim() || undefined,
+          preferences,
         }),
       });
 
@@ -240,6 +290,67 @@ export default function GenerateForm() {
             placeholder={"Paste your git diff output here...\n\ne.g. git diff main...HEAD"}
             className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm text-text-primary placeholder:text-text-muted font-mono resize-y focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
           />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => setShowSettings((v) => !v)}
+            className="self-start flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+          >
+            <span>{showSettings ? "▾" : "▸"}</span>
+            <span>Preferences</span>
+            {(preferences.tone !== "balanced" || preferences.sections.length < SECTION_OPTIONS.length) && (
+              <span className="text-accent">•</span>
+            )}
+          </button>
+
+          {showSettings && (
+            <div className="rounded-lg border border-border bg-surface px-5 py-4 flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-medium text-text-muted uppercase tracking-wider">Tone</span>
+                <div className="flex flex-wrap gap-2">
+                  {TONE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updatePreferences({ tone: opt.value })}
+                      className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+                        preferences.tone === opt.value
+                          ? "bg-accent text-white"
+                          : "bg-background border border-border text-text-muted hover:text-text-primary hover:border-text-muted"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-medium text-text-muted uppercase tracking-wider">Sections</span>
+                <div className="flex flex-wrap gap-2">
+                  {SECTION_OPTIONS.map((s) => {
+                    const active = preferences.sections.includes(s.id);
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggleSection(s.id)}
+                        className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+                          active
+                            ? "bg-accent/20 text-accent border border-accent/30"
+                            : "bg-background border border-border text-text-muted hover:text-text-primary hover:border-text-muted"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <button

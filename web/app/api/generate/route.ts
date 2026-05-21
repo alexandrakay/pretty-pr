@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { buildPrompt, SYSTEM_PROMPT } from "@/app/lib/prompt";
+import { buildPrompt, applyPreferencesToPrompt, DEFAULT_PREFERENCES, SYSTEM_PROMPT, type Preferences } from "@/app/lib/prompt";
 
 const client = new Anthropic();
 
@@ -10,13 +10,26 @@ export async function POST(request: Request) {
     return Response.json({ error: "commits is required" }, { status: 400 });
   }
 
-  const { commits, branch, diff } = body as { commits: string; branch?: string; diff?: string };
+  const { commits, branch, diff, preferences } = body as {
+    commits: string;
+    branch?: string;
+    diff?: string;
+    preferences?: Preferences;
+  };
+
+  const prefs: Preferences = {
+    tone: preferences?.tone ?? DEFAULT_PREFERENCES.tone,
+    sections: Array.isArray(preferences?.sections) ? preferences.sections : DEFAULT_PREFERENCES.sections,
+  };
+
+  const basePrompt = buildPrompt({ commits, branch, diff });
+  const prompt = applyPreferencesToPrompt(basePrompt, prefs);
 
   const stream = await client.messages.stream({
     model: "claude-opus-4-7",
     max_tokens: 1500,
     system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: buildPrompt({ commits, branch, diff }) }],
+    messages: [{ role: "user", content: prompt }],
   });
 
   const readable = new ReadableStream({

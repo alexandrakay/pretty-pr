@@ -1,3 +1,62 @@
+export interface Preferences {
+  tone: "balanced" | "concise" | "detailed" | "formal";
+  sections: string[];
+}
+
+export const DEFAULT_PREFERENCES: Preferences = {
+  tone: "balanced",
+  sections: ["title", "description", "changelog", "reviewer-notes", "testing-checklist"],
+};
+
+const SECTION_HEADINGS: Record<string, string> = {
+  title: "## PR Title",
+  description: "## PR Description",
+  changelog: "## Changelog Entry",
+  "reviewer-notes": "## Reviewer Notes",
+  "testing-checklist": "## Testing Checklist",
+};
+
+const TONE_INSTRUCTIONS: Record<string, string | null> = {
+  formal: "Use formal, professional language throughout.",
+  concise: "Be as concise as possible. Prefer bullet points over prose. Keep each section brief.",
+  detailed: "Be thorough and detailed. Include context, motivation, and edge cases where relevant.",
+  balanced: null,
+};
+
+export function applyPreferencesToPrompt(prompt: string, prefs: Preferences): string {
+  let result = prompt;
+
+  const toneNote = TONE_INSTRUCTIONS[prefs.tone] ?? null;
+  if (toneNote) {
+    result = result.replace(
+      "Respond with exactly this structure",
+      `${toneNote}\n\nRespond with exactly this structure`
+    );
+  }
+
+  const excluded = Object.entries(SECTION_HEADINGS)
+    .filter(([key]) => !prefs.sections.includes(key))
+    .map(([, heading]) => heading);
+
+  if (excluded.length > 0) {
+    const lines = result.split("\n");
+    const filtered: string[] = [];
+    let skip = false;
+
+    for (const line of lines) {
+      const isExcluded = excluded.some((h) => line.startsWith(h));
+      if (isExcluded) { skip = true; continue; }
+      const isAnyHeading = Object.values(SECTION_HEADINGS).some((h) => line.startsWith(h));
+      if (isAnyHeading) skip = false;
+      if (!skip) filtered.push(line);
+    }
+
+    result = filtered.join("\n");
+  }
+
+  return result;
+}
+
 interface PromptContext {
   commits: string;
   branch?: string;
