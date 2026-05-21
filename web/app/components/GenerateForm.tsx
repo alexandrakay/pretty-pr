@@ -384,6 +384,9 @@ export default function GenerateForm() {
               <OutputCard title={section} content={parsed[section]!} />
             </div>
           ))}
+          {parsed["PR Title"] && parsed["PR Description"] && (
+            <FillPR title={parsed["PR Title"]!} description={parsed["PR Description"]!} />
+          )}
         </div>
       )}
     </div>
@@ -423,6 +426,90 @@ function PRScore({ parsed, loading }: { parsed: ParsedOutput; loading: boolean }
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function FillPR({ title, description }: { title: string; description: string }) {
+  const [open, setOpen] = useState(false);
+  const [prUrl, setPrUrl] = useState("");
+  const [token, setToken] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [prLink, setPrLink] = useState("");
+
+  async function handleFill() {
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/fill-pr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prUrl, token, title, description }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus("error");
+        setErrorMsg(data.error ?? "Something went wrong.");
+      } else {
+        setPrLink(data.url);
+        setStatus("success");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Network error — check your connection.");
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-border bg-surface px-5 py-4 flex flex-col gap-3 animate-fade-slide-in">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center justify-between w-full text-left"
+      >
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">Fill GitHub PR</span>
+        <span className="text-xs text-text-muted">{open ? "▾" : "▸"}</span>
+      </button>
+
+      {open && (
+        <div className="flex flex-col gap-3 pt-1">
+          <p className="text-xs text-text-muted leading-relaxed">
+            Paste a GitHub PR URL and your Personal Access Token to update the PR title and description in one click. Your token is never stored.
+          </p>
+          <input
+            type="url"
+            placeholder="https://github.com/owner/repo/pull/123"
+            value={prUrl}
+            onChange={(e) => setPrUrl(e.target.value)}
+            className="w-full rounded border border-border bg-background px-3 py-2 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+          <input
+            type="password"
+            placeholder="GitHub Personal Access Token (repo scope)"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            className="w-full rounded border border-border bg-background px-3 py-2 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+          {status === "error" && <p className="text-xs text-red-400">{errorMsg}</p>}
+          {status === "success" && (
+            <p className="text-xs text-green-400">
+              PR updated.{" "}
+              <a href={prLink} target="_blank" rel="noopener noreferrer" className="underline">
+                View on GitHub →
+              </a>
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleFill}
+            disabled={!prUrl.trim() || !token.trim() || status === "loading"}
+            className="self-start rounded bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
+          >
+            {status === "loading" ? "Filling..." : "Fill PR"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
