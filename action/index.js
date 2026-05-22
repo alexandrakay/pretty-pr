@@ -1,21 +1,35 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { execSync } from 'child_process'
+import { readFileSync } from 'fs'
 
 const {
-  ANTHROPIC_API_KEY,
-  POST_IF_EMPTY = 'true',
-  MODE = 'diff',
-  GITHUB_TOKEN,
-  PR_NUMBER,
-  PR_BODY = '',
-  PR_TITLE = '',
-  PR_URL = '',
-  PR_AUTHOR = '',
-  BASE_REF,
-  HEAD_REF,
-  REPO,
-  SLACK_WEBHOOK_URL = '',
+  // Action inputs (set by GitHub as INPUT_* env vars)
+  INPUT_ANTHROPIC_API_KEY,
+  INPUT_GITHUB_TOKEN,
+  INPUT_MODE,
+  INPUT_POST_IF_EMPTY,
+  INPUT_SLACK_WEBHOOK_URL,
+  // GitHub-provided context env vars
+  ANTHROPIC_API_KEY: RAW_ANTHROPIC_API_KEY,
+  GITHUB_TOKEN: RAW_GITHUB_TOKEN,
+  GITHUB_REPOSITORY: REPO,
+  GITHUB_BASE_REF: BASE_REF,
+  GITHUB_HEAD_REF: HEAD_REF,
 } = process.env
+
+const ANTHROPIC_API_KEY = INPUT_ANTHROPIC_API_KEY || RAW_ANTHROPIC_API_KEY
+const GITHUB_TOKEN = INPUT_GITHUB_TOKEN || RAW_GITHUB_TOKEN
+const MODE = INPUT_MODE || 'diff'
+const POST_IF_EMPTY = INPUT_POST_IF_EMPTY ?? 'true'
+const SLACK_WEBHOOK_URL = INPUT_SLACK_WEBHOOK_URL || ''
+
+// PR context from GitHub event payload
+const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf-8'))
+const PR_NUMBER = String(event.pull_request?.number || '')
+const PR_BODY = event.pull_request?.body || ''
+const PR_TITLE = event.pull_request?.title || ''
+const PR_URL = event.pull_request?.html_url || ''
+const PR_AUTHOR = event.pull_request?.user?.login || ''
 
 if (!ANTHROPIC_API_KEY) {
   console.error('Error: ANTHROPIC_API_KEY is required.')
@@ -144,36 +158,42 @@ async function postComment(body) {
   return data.html_url
 }
 
-const commits = getCommits()
-if (!commits) {
-  console.log('No commits found. Skipping.')
-  process.exit(0)
+async function main() {
+  const commits = getCommits()
+  if (!commits) {
+    console.log('No commits found. Skipping.')
+    process.exit(0)
+  }
+
+  const diff = MODE !== 'commits' ? getDiff() : null
+  const branch = HEAD_REF || ''
+
+  console.log(`Generating PR description (mode: ${MODE})...`)
+
+  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
+  const prompt = buildPrompt(commits, diff, branch)
+
+  const message = await client.messages.create({
+    model: 'claude-opus-4-7',
+    max_tokens: 1024,
+    system: 'You write precise, honest pull request descriptions for software engineers. No fluff.',
+    messages: [{ role: 'user', content: prompt }],
+  })
+
+  const output = message.content[0].text
+  const commentBody = formatComment(output)
+  const commentUrl = await postComment(commentBody)
+
+  console.log(`Posted: ${commentUrl}`)
+
+  if (SLACK_WEBHOOK_URL) {
+    const summary = extractOneLiner(output)
+    await postSlack(summary)
+    console.log('Slack summary posted.')
+  }
 }
 
-const diff = MODE !== 'commits' ? getDiff() : null
-const status = MODE === 'full' ? getStatus() : null
-const branch = HEAD_REF || ''
-
-console.log(`Generating PR description (mode: ${MODE})...`)
-
-const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
-const prompt = buildPrompt(commits, diff, branch)
-
-const message = await client.messages.create({
-  model: 'claude-opus-4-7',
-  max_tokens: 1024,
-  system: 'You write precise, honest pull request descriptions for software engineers. No fluff.',
-  messages: [{ role: 'user', content: prompt }],
+main().catch((err) => {
+  console.error(err.message)
+  process.exit(1)
 })
-
-const output = message.content[0].text
-const commentBody = formatComment(output)
-const commentUrl = await postComment(commentBody)
-
-console.log(`Posted: ${commentUrl}`)
-
-if (SLACK_WEBHOOK_URL) {
-  const summary = extractOneLiner(output)
-  await postSlack(summary)
-  console.log('Slack summary posted.')
-}

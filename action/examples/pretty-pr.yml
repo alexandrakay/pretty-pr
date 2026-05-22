@@ -1,0 +1,22 @@
+name: PRetty PR
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  pretty-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: alexandrakay/pretty-pr@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # mode: diff          # "commits", "diff" (default), or "full"
+          # post-if-empty: true # only generate if PR body is empty (default: true)
+          # slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}  # optional

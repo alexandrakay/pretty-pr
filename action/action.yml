@@ -1,0 +1,32 @@
+name: 'PRetty PR'
+description: 'Auto-generate PR descriptions and comments from commits and diff using AI.'
+author: 'alexandrakay'
+
+branding:
+  icon: 'edit-3'
+  color: 'purple'
+
+inputs:
+  anthropic-api-key:
+    description: 'Anthropic API key (store as a repo secret)'
+    required: true
+  github-token:
+    description: 'GitHub token for posting PR comments'
+    required: false
+    default: ${{ github.token }}
+  mode:
+    description: 'What to include: "commits", "diff" (commits + diff), or "full" (commits + diff + status)'
+    required: false
+    default: 'diff'
+  post-if-empty:
+    description: 'Only generate if the PR body is empty'
+    required: false
+    default: 'true'
+  slack-webhook-url:
+    description: 'Optional Slack webhook URL to post a one-line PR summary'
+    required: false
+    default: ''
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
