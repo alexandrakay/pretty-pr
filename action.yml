@@ -1,4 +1,4 @@
-name: 'PRetty'
+name: 'PRetty PR Description Generator'
 description: 'Auto-generate PR descriptions from commits and post as a comment.'
 
 branding:
