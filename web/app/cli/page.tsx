@@ -2,7 +2,7 @@ import Header from "../components/Header";
 
 const flags = [
   {
-    flag: "npx pretty-pr",
+    flag: "npx @alexandrakay/pretty-pr",
     description: "Commits only. Fastest. Good enough for most PRs.",
   },
   {
@@ -38,17 +38,17 @@ const flags = [
 const ladder = [
   {
     input: "Commits only",
-    command: "npx pretty-pr",
+    command: "npx @alexandrakay/pretty-pr",
     output: "Decent PR title, okay description, thin on context.",
   },
   {
     input: "Commits + diff",
-    command: "npx pretty-pr --diff",
+    command: "npx @alexandrakay/pretty-pr --diff",
     output: "Strong title, solid description, inferred testing notes.",
   },
   {
     input: "Commits + diff + branch",
-    command: "npx pretty-pr --full",
+    command: "npx @alexandrakay/pretty-pr --full",
     output: "Full picture — best title, reviewer notes, complete testing checklist.",
   },
 ];
@@ -65,7 +65,7 @@ export default function CLIPage() {
             P<span className="text-accent">R</span>etty CLI
           </h1>
           <p className="text-text-muted leading-relaxed">
-            Run <code className="text-text-primary bg-surface border border-border rounded px-1.5 py-0.5 text-sm font-mono">npx pretty-pr</code> inside any repo. It reads your git history,
+            Run <code className="text-text-primary bg-surface border border-border rounded px-1.5 py-0.5 text-sm font-mono">npx @alexandrakay/pretty-pr</code> inside any repo. It reads your git history,
             understands what you built, and writes the PR description your team deserves.
           </p>
         </div>
@@ -75,7 +75,7 @@ export default function CLIPage() {
           <h2 className="text-2xl font-bold tracking-tight">Install</h2>
           <p className="text-text-muted text-sm leading-relaxed">No install required — run it directly with npx.</p>
           <pre className="rounded-lg border border-border bg-surface px-5 py-4 text-sm font-mono text-text-primary overflow-x-auto">
-            npx pretty-pr
+            npx @alexandrakay/pretty-pr
           </pre>
           <p className="text-text-muted text-sm leading-relaxed">
             Or install globally if you use it every day:
@@ -180,7 +180,7 @@ export default function CLIPage() {
             installed and authenticated, PRetty can open the PR for you:
           </p>
           <pre className="rounded-lg border border-border bg-surface px-5 py-4 text-sm font-mono text-text-primary overflow-x-auto">
-            npx pretty-pr --full --open
+            npx @alexandrakay/pretty-pr --full --open
           </pre>
           <p className="text-text-muted text-sm leading-relaxed">
             Add <code className="text-text-primary bg-surface border border-border rounded px-1.5 py-0.5 font-mono">--draft</code> to open it as a draft instead.
