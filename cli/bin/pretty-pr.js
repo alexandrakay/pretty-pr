@@ -21,6 +21,13 @@ program
 
 const opts = program.opts()
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('\n  Error: ANTHROPIC_API_KEY is not set.')
+  console.error('  Get a key at https://console.anthropic.com and run:')
+  console.error('  export ANTHROPIC_API_KEY=your-key-here\n')
+  process.exit(1)
+}
+
 try {
   assertGitRepo()
 } catch (err) {
