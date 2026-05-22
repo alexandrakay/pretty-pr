@@ -4,7 +4,7 @@
   "description": "Your commits tell the whole story. Your PR should too.",
   "type": "module",
   "bin": {
-    "pretty-pr": "./bin/pretty-pr.js"
+    "pretty-pr": "bin/pretty-pr.js"
   },
   "files": [
     "bin",
@@ -21,11 +21,19 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["git", "pr", "pull-request", "changelog", "developer-tools", "ai", "anthropic"],
+  "keywords": [
+    "git",
+    "pr",
+    "pull-request",
+    "changelog",
+    "developer-tools",
+    "ai",
+    "anthropic"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alexandrakay/pretty-pr.git"
+    "url": "git+https://github.com/alexandrakay/pretty-pr.git"
   },
   "homepage": "https://pretty-pr.com/cli"
 }
