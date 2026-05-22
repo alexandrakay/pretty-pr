@@ -17,3 +17,5 @@ jobs:
       - uses: ./action
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
