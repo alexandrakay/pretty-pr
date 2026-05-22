@@ -2,8 +2,8 @@ export default function TwoWaysSection() {
   return (
     <section className="px-6 py-20 border-t border-border bg-surface">
       <div className="max-w-5xl mx-auto flex flex-col gap-12">
-        <h2 className="text-3xl font-bold tracking-tight text-center">Browser or terminal. Your call.</h2>
-        <div className="grid sm:grid-cols-2 gap-8">
+        <h2 className="text-3xl font-bold tracking-tight text-center">Three ways to generate PRs.</h2>
+        <div className="grid sm:grid-cols-3 gap-8">
           <div className="rounded-lg border border-border bg-background p-8 flex flex-col gap-4">
             <h3 className="text-lg font-semibold">Web app</h3>
             <p className="text-sm text-text-muted leading-relaxed">
@@ -35,6 +35,26 @@ npx pretty-pr --out pr.md  # export to file`}
               className="self-start text-sm text-accent hover:text-accent-hover font-medium transition-colors"
             >
               Read the CLI docs →
+            </a>
+          </div>
+          <div className="rounded-lg border border-border bg-background p-8 flex flex-col gap-4">
+            <h3 className="text-lg font-semibold">GitHub Action</h3>
+            <p className="text-sm text-text-muted leading-relaxed">
+              Drop one workflow file into your repo. Every new PR gets an AI-generated description
+              filled in automatically — before anyone has to write a word.
+            </p>
+            <pre className="text-xs font-mono bg-surface border border-border rounded-lg p-4 text-text-muted leading-relaxed overflow-x-auto">
+{`- uses: alexandrakay/pretty-pr/action@v1
+  with:
+    anthropic-api-key: \${{ secrets.ANTHROPIC_API_KEY }}`}
+            </pre>
+            <a
+              href="https://github.com/alexandrakay/pretty-pr/tree/main/action"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="self-start text-sm text-accent hover:text-accent-hover font-medium transition-colors"
+            >
+              View on GitHub →
             </a>
           </div>
         </div>

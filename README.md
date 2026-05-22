@@ -70,6 +70,37 @@ Paste commits into [pretty-pr.com](https://pretty-pr.com) and get the same outpu
 
 ---
 
+## GitHub Action
+
+Drop one workflow file into your repo. Every new PR gets an AI-generated description filled in automatically.
+
+```yaml
+# .github/workflows/pretty-pr.yml
+name: PRetty PR
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  pretty-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: alexandrakay/pretty-pr/action@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+Add `ANTHROPIC_API_KEY` as a repo secret and you're done. When a PR is opened with an empty description, PRetty fills it in. If the description already has content, it posts the generated copy as a comment instead.
+
+---
+
 ## Local development
 
 ```bash
