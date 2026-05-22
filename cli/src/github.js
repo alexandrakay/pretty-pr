@@ -30,6 +30,12 @@ export function openPR({ title, body, base, draft = false }) {
   const tmp = join(tmpdir(), `pretty-pr-${Date.now()}.md`)
 
   try {
+    run('git push -u origin HEAD')
+  } catch {
+    // already pushed or no remote — gh pr create will surface the real error
+  }
+
+  try {
     writeFileSync(tmp, body, 'utf8')
 
     const args = [

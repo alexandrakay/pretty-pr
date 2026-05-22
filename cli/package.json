@@ -1,6 +1,6 @@
 {
   "name": "@alexandrakay/pretty-pr",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Your commits tell the whole story. Your PR should too.",
   "type": "module",
   "bin": {
