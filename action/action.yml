@@ -1,4 +1,4 @@
-name: 'PRetty PR'
+name: 'PRetty PR Description Generator'
 description: 'Auto-generate PR descriptions and comments from commits and diff using AI.'
 author: 'alexandrakay'
 
