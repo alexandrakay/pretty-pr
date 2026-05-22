@@ -1,5 +1,5 @@
 {
-  "name": "pretty-pr",
+  "name": "@alexandrakay/pretty-pr",
   "version": "0.1.4",
   "description": "Your commits tell the whole story. Your PR should too.",
   "type": "module",

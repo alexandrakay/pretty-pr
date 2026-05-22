@@ -37,14 +37,14 @@ Run PRetty against any branch and get:
 ## CLI
 
 ```bash
-npx pretty-pr                  # commits only, fast
-npx pretty-pr --diff           # includes diff, richer output
-npx pretty-pr --full           # everything: commits + diff + branch
-npx pretty-pr --base main      # specify base branch
-npx pretty-pr --range abc..def # specific commit range
-npx pretty-pr --out pr.md      # write to markdown file
-npx pretty-pr --open           # generate copy and open a GitHub PR
-npx pretty-pr --open --draft   # open as a draft PR
+npx @alexandrakay/pretty-pr                  # commits only, fast
+npx @alexandrakay/pretty-pr --diff           # includes diff, richer output
+npx @alexandrakay/pretty-pr --full           # everything: commits + diff + branch
+npx @alexandrakay/pretty-pr --base main      # specify base branch
+npx @alexandrakay/pretty-pr --range abc..def # specific commit range
+npx @alexandrakay/pretty-pr --out pr.md      # write to markdown file
+npx @alexandrakay/pretty-pr --open           # generate copy and open a GitHub PR
+npx @alexandrakay/pretty-pr --open --draft   # open as a draft PR
 ```
 
 ### Setup
@@ -52,7 +52,7 @@ npx pretty-pr --open --draft   # open as a draft PR
 ```bash
 cd your-repo
 export ANTHROPIC_API_KEY=sk-ant-...
-npx pretty-pr --diff
+npx @alexandrakay/pretty-pr --diff
 ```
 
 Or add `ANTHROPIC_API_KEY` to your `.env`.
