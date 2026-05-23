@@ -4,7 +4,7 @@ export default function TwoWaysSection() {
       <div className="max-w-5xl mx-auto flex flex-col gap-12">
         <h2 className="text-3xl font-bold tracking-tight text-center">Three ways to generate PRs.</h2>
         <div className="grid sm:grid-cols-3 gap-8">
-          <div className="rounded-lg border border-border bg-background p-8 flex flex-col gap-4">
+          <div className="rounded-lg border border-border bg-background p-6 sm:p-8 flex flex-col gap-4">
             <h3 className="text-lg font-semibold">Web app</h3>
             <p className="text-sm text-text-muted leading-relaxed">
               Open a tab, paste your commits, get structured PR copy in seconds. No setup, no config,
@@ -17,7 +17,7 @@ export default function TwoWaysSection() {
               Try the web app →
             </a>
           </div>
-          <div className="rounded-lg border border-border bg-background p-8 flex flex-col gap-4">
+          <div className="rounded-lg border border-border bg-background p-6 sm:p-8 flex flex-col gap-4">
             <h3 className="text-lg font-semibold">CLI</h3>
             <p className="text-sm text-text-muted leading-relaxed">
               Install nothing. Run <code className="font-mono text-xs bg-surface px-1 py-0.5 rounded">npx @alexandrakay/pretty-pr</code> in
@@ -37,7 +37,7 @@ npx @alexandrakay/pretty-pr --out pr.md  # export to file`}
               Read the CLI docs →
             </a>
           </div>
-          <div className="rounded-lg border border-border bg-background p-8 flex flex-col gap-4">
+          <div className="rounded-lg border border-border bg-background p-6 sm:p-8 flex flex-col gap-4">
             <h3 className="text-lg font-semibold">GitHub Action</h3>
             <p className="text-sm text-text-muted leading-relaxed">
               Drop one workflow file into your repo. Every new PR gets an AI-generated description
