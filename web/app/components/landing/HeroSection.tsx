@@ -158,7 +158,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-lg">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
         <a
           href="/app"
           className="w-full sm:w-auto text-center rounded-lg bg-accent hover:bg-accent-hover px-7 py-3 text-sm font-semibold text-white transition-colors"
@@ -166,7 +166,7 @@ export default function HeroSection() {
           Try it free →
         </a>
         <div className="w-full sm:w-auto flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-3">
-          <code className="text-sm font-mono text-text-muted flex-1 text-center sm:text-left">
+          <code className="text-sm font-mono text-text-muted whitespace-nowrap">
             npx @alexandrakay/pretty-pr
           </code>
           <CopyButton text="npx @alexandrakay/pretty-pr" />
