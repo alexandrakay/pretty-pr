@@ -74,7 +74,7 @@ export default function HeroSection() {
   return (
     <section className="px-6 py-20 flex flex-col items-center gap-10 text-center">
       <div className="flex flex-col gap-4 max-w-2xl">
-        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-none">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-none">
           Bad commits.{" "}
           <span className="text-accent">Great PRs.</span>
         </h1>
@@ -157,14 +157,14 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-lg">
         <a
           href="/app"
-          className="rounded-lg bg-accent hover:bg-accent-hover px-7 py-3 text-sm font-semibold text-white transition-colors"
+          className="w-full sm:w-auto text-center rounded-lg bg-accent hover:bg-accent-hover px-7 py-3 text-sm font-semibold text-white transition-colors"
         >
           Try it free →
         </a>
-        <code className="rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
+        <code className="w-full sm:w-auto text-center rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
           npx @alexandrakay/pretty-pr
         </code>
         <a

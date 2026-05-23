@@ -276,7 +276,7 @@ export default function GenerateForm() {
             History ({history.length})
           </button>
           {showHistory && (
-            <div className="absolute top-6 left-0 z-10 w-80 rounded-lg border border-border bg-surface shadow-lg py-1">
+            <div className="absolute top-6 left-0 z-10 w-72 sm:w-80 max-w-[calc(100vw-3rem)] rounded-lg border border-border bg-surface shadow-lg py-1">
               {history.map((entry) => (
                 <button
                   key={entry.id}

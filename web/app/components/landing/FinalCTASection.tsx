@@ -8,14 +8,14 @@ export default function FinalCTASection() {
         Your commits already tell the story. Let PRetty turn them into something your team can
         actually use.
       </p>
-      <div className="flex flex-col sm:flex-row items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-md">
         <a
           href="/app"
-          className="rounded-lg bg-accent hover:bg-accent-hover px-6 py-3 text-sm font-semibold text-white transition-colors"
+          className="w-full sm:w-auto text-center rounded-lg bg-accent hover:bg-accent-hover px-6 py-3 text-sm font-semibold text-white transition-colors"
         >
           Try the web app
         </a>
-        <code className="rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
+        <code className="w-full sm:w-auto text-center rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
           npx @alexandrakay/pretty-pr
         </code>
       </div>
