@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import CopyButton from "../CopyButton";
 
 type Phase = "before" | "running" | "after";
 
@@ -164,9 +165,12 @@ export default function HeroSection() {
         >
           Try it free →
         </a>
-        <code className="w-full sm:w-auto text-center rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
-          npx @alexandrakay/pretty-pr
-        </code>
+        <div className="w-full sm:w-auto flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-3">
+          <code className="text-sm font-mono text-text-muted flex-1 text-center sm:text-left">
+            npx @alexandrakay/pretty-pr
+          </code>
+          <CopyButton text="npx @alexandrakay/pretty-pr" />
+        </div>
         <a
           href="https://github.com/alexandrakay/pretty-pr/tree/main/action"
           target="_blank"

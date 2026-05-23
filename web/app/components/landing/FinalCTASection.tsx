@@ -1,3 +1,5 @@
+import CopyButton from "../CopyButton";
+
 export default function FinalCTASection() {
   return (
     <section className="px-6 py-24 border-t border-border text-center flex flex-col items-center gap-8">
@@ -15,9 +17,12 @@ export default function FinalCTASection() {
         >
           Try the web app
         </a>
-        <code className="w-full sm:w-auto text-center rounded-lg border border-border bg-surface px-4 py-3 text-sm font-mono text-text-muted">
-          npx @alexandrakay/pretty-pr
-        </code>
+        <div className="w-full sm:w-auto flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-3">
+          <code className="text-sm font-mono text-text-muted flex-1 text-center sm:text-left">
+            npx @alexandrakay/pretty-pr
+          </code>
+          <CopyButton text="npx @alexandrakay/pretty-pr" />
+        </div>
       </div>
       <p className="text-xs text-text-muted">
         Free to try. No signup required for the web app. MIT licensed CLI.
