@@ -10,7 +10,7 @@ export default function FinalCTASection() {
         Your commits already tell the story. Let PRetty turn them into something your team can
         actually use.
       </p>
-      <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-md">
+      <div className="flex flex-col sm:flex-row items-center gap-4">
         <a
           href="/app"
           className="w-full sm:w-auto text-center rounded-lg bg-accent hover:bg-accent-hover px-6 py-3 text-sm font-semibold text-white transition-colors"
@@ -18,7 +18,7 @@ export default function FinalCTASection() {
           Try the web app
         </a>
         <div className="w-full sm:w-auto flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-3">
-          <code className="text-sm font-mono text-text-muted flex-1 text-center sm:text-left">
+          <code className="text-sm font-mono text-text-muted whitespace-nowrap">
             npx @alexandrakay/pretty-pr
           </code>
           <CopyButton text="npx @alexandrakay/pretty-pr" />
