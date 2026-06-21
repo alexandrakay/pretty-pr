@@ -1,6 +1,6 @@
 {
   "name": "@alexandrakay/pretty-pr",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "Your commits tell the whole story. Your PR should too.",
   "type": "module",
   "bin": {
@@ -8,7 +8,17 @@
   },
   "files": [
     "bin",
-    "src"
+    "src/ai.js",
+    "src/changelog.js",
+    "src/clipboard.js",
+    "src/config.js",
+    "src/git.js",
+    "src/github.js",
+    "src/hints.js",
+    "src/output.js",
+    "src/prompt.js",
+    "src/review.js",
+    "src/score.js"
   ],
   "scripts": {
     "dev": "node bin/pretty-pr.js",
