@@ -4,6 +4,7 @@ import { assertGitRepo, getBranchName, getBaseBranch, getCommits, getDiff, getSt
 import { generate, generateReview } from '../src/ai.js'
 import { printResult, printStreamHeader, printStreamChunk, printStreamFooter, writeToFile } from '../src/output.js'
 import { ghAvailable, parseOutput, openPR } from '../src/github.js'
+import { copyToClipboard } from '../src/clipboard.js'
 
 program
   .name('pretty-pr')
@@ -17,6 +18,7 @@ program
   .option('--open', 'create a GitHub PR with the generated copy (requires gh CLI)')
   .option('--draft', 'open as a draft PR (use with --open)')
   .option('--review', 'generate a reviewer brief instead of PR copy')
+  .option('--clipboard', 'copy output to clipboard instead of printing')
   .parse()
 
 const opts = program.opts()
@@ -55,9 +57,8 @@ const status = opts.full ? getStatus() : null
 
 const context = { commits, diff, branch, status }
 
-// For --out and --open we need the full text before acting on it — buffer silently.
-// For terminal output, stream tokens directly so the response feels immediate.
-const streamToTerminal = !opts.out && !opts.open
+// Stream to terminal unless we need to buffer first (--out, --open, --clipboard)
+const streamToTerminal = !opts.out && !opts.open && !opts.clipboard
 
 if (streamToTerminal) {
   console.log(`\n  ${opts.review ? 'Generating reviewer brief' : 'Generating PR copy'}${useDiff ? ' (with diff)' : ''}...`)
@@ -90,6 +91,23 @@ try {
     }
   } else if (opts.out) {
     writeToFile(result, opts.out)
+    if (opts.clipboard) {
+      const clip = await copyToClipboard(result)
+      if (clip.success) {
+        console.log('  Copied to clipboard.')
+      } else {
+        console.warn(`  Warning: clipboard copy failed — ${clip.error}`)
+      }
+    }
+  } else if (opts.clipboard) {
+    const clip = await copyToClipboard(result)
+    if (clip.success) {
+      console.log('\n  Copied to clipboard.\n')
+    } else {
+      console.warn(`\n  Warning: clipboard copy failed — ${clip.error}`)
+      console.warn('  Falling back to terminal output:\n')
+      printResult(result)
+    }
   }
 } catch (err) {
   if (err.status === 401) {
