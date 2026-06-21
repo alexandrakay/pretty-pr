@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { program } from 'commander'
-import { assertGitRepo, getBranchName, getBaseBranch, getCommits, getDiff, getStatus } from '../src/git.js'
+import { assertGitRepo, getBranchName, getBaseBranch, getCommits, getDiff, getStatus, getCommitsBetweenTags } from '../src/git.js'
 import { generate, generateReview } from '../src/ai.js'
+import { generateChangelog } from '../src/changelog.js'
 import { printResult, printStreamHeader, printStreamChunk, printStreamFooter, writeToFile } from '../src/output.js'
 import { ghAvailable, parseOutput, openPR } from '../src/github.js'
 import { copyToClipboard } from '../src/clipboard.js'
@@ -19,6 +20,9 @@ program
   .option('--draft', 'open as a draft PR (use with --open)')
   .option('--review', 'generate a reviewer brief instead of PR copy')
   .option('--clipboard', 'copy output to clipboard instead of printing')
+  .option('--mode <mode>', 'generation mode: pr (default) or changelog')
+  .option('--from <ref>', 'start ref for changelog mode (tag or commit)')
+  .option('--to <ref>', 'end ref for changelog mode (default: HEAD)')
   .parse()
 
 const opts = program.opts()
@@ -42,6 +46,47 @@ if (opts.open && !ghAvailable()) {
   process.exit(1)
 }
 
+// ── Changelog mode ──────────────────────────────────────────────────────────
+if (opts.mode === 'changelog') {
+  if (!opts.from) {
+    console.error('\n  Error: --mode changelog requires --from <tag-or-ref>\n')
+    console.error('  Example: npx pretty-pr --mode changelog --from v1.2.0\n')
+    process.exit(1)
+  }
+
+  const from = opts.from
+  const to = opts.to ?? 'HEAD'
+  const commits = getCommitsBetweenTags(from, to)
+
+  if (!commits) {
+    console.error(`\n  Error: No commits found between ${from} and ${to}.\n`)
+    process.exit(1)
+  }
+
+  const date = new Date().toISOString().slice(0, 10)
+  const context = { commits, from, to, date }
+
+  console.log(`\n  Generating changelog from ${from} to ${to}...`)
+
+  try {
+    if (opts.out) {
+      // Buffer silently, then write to file
+      const result = await generateChangelog(context)
+      writeToFile(result, opts.out)
+    } else {
+      // Stream tokens live to terminal
+      printStreamHeader()
+      await generateChangelog(context, printStreamChunk)
+      printStreamFooter()
+    }
+  } catch (err) {
+    console.error(`\n  Error: ${err.message}\n`)
+    process.exit(1)
+  }
+  process.exit(0)
+}
+
+// ── PR / Review mode (default) ──────────────────────────────────────────────
 const useDiff = opts.diff || opts.full || opts.open || opts.review
 const base = getBaseBranch(opts.base)
 const branch = getBranchName()
