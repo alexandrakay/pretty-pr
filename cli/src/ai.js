@@ -5,28 +5,49 @@ import { loadConfig, applyConfigToPrompt } from './config.js'
 
 const client = new Anthropic()
 
-export async function generateReview(diff) {
-  const prompt = buildReviewerPrompt(diff)
-  const message = await client.messages.create({
-    model: 'claude-opus-4-7',
-    max_tokens: 1024,
-    system: 'You are a senior engineer helping a teammate quickly orient themselves before reviewing a pull request. Be direct, specific, and practical.',
-    messages: [{ role: 'user', content: prompt }],
-  })
-  return message.content[0].text
+async function streamToString(stream, onChunk) {
+  let text = ''
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+      const chunk = event.delta.text
+      text += chunk
+      onChunk?.(chunk)
+    }
+  }
+  return text
 }
 
-export async function generate(context) {
-  const config = loadConfig()
-  const basePrompt = buildPrompt(context)
-  const prompt = applyConfigToPrompt(basePrompt, config)
+export function createGenerateWithClient(anthropicClient) {
+  return async function generate(context, onChunk) {
+    const config = loadConfig()
+    const basePrompt = buildPrompt(context)
+    const prompt = applyConfigToPrompt(basePrompt, config)
 
-  const message = await client.messages.create({
-    model: 'claude-opus-4-7',
-    max_tokens: 1024,
-    system: 'You write precise, honest pull request descriptions for software engineers. No fluff.',
-    messages: [{ role: 'user', content: prompt }],
-  })
+    const stream = anthropicClient.messages.stream({
+      model: 'claude-opus-4-7',
+      max_tokens: 1024,
+      system: 'You write precise, honest pull request descriptions for software engineers. No fluff.',
+      messages: [{ role: 'user', content: prompt }],
+    })
 
-  return message.content[0].text
+    return streamToString(stream, onChunk)
+  }
 }
+
+export function createGenerateReviewWithClient(anthropicClient) {
+  return async function generateReview(diff, onChunk) {
+    const prompt = buildReviewerPrompt(diff)
+
+    const stream = anthropicClient.messages.stream({
+      model: 'claude-opus-4-7',
+      max_tokens: 1024,
+      system: 'You are a senior engineer helping a teammate quickly orient themselves before reviewing a pull request. Be direct, specific, and practical.',
+      messages: [{ role: 'user', content: prompt }],
+    })
+
+    return streamToString(stream, onChunk)
+  }
+}
+
+export const generate = createGenerateWithClient(client)
+export const generateReview = createGenerateReviewWithClient(client)

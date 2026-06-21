@@ -2,7 +2,7 @@
 import { program } from 'commander'
 import { assertGitRepo, getBranchName, getBaseBranch, getCommits, getDiff, getStatus } from '../src/git.js'
 import { generate, generateReview } from '../src/ai.js'
-import { printResult, writeToFile } from '../src/output.js'
+import { printResult, printStreamHeader, printStreamChunk, printStreamFooter, writeToFile } from '../src/output.js'
 import { ghAvailable, parseOutput, openPR } from '../src/github.js'
 
 program
@@ -53,14 +53,29 @@ if (!commits) {
 const diff = useDiff ? getDiff(base, opts.range) : null
 const status = opts.full ? getStatus() : null
 
-console.log(`\n  ${opts.review ? 'Generating reviewer brief' : 'Generating PR copy'}${useDiff ? ' (with diff)' : ''}...`)
-
 const context = { commits, diff, branch, status }
 
+// For --out and --open we need the full text before acting on it — buffer silently.
+// For terminal output, stream tokens directly so the response feels immediate.
+const streamToTerminal = !opts.out && !opts.open
+
+if (streamToTerminal) {
+  console.log(`\n  ${opts.review ? 'Generating reviewer brief' : 'Generating PR copy'}${useDiff ? ' (with diff)' : ''}...`)
+  printStreamHeader()
+} else {
+  console.log(`\n  ${opts.review ? 'Generating reviewer brief' : 'Generating PR copy'}${useDiff ? ' (with diff)' : ''}...`)
+}
+
 try {
+  const onChunk = streamToTerminal ? printStreamChunk : undefined
+
   const result = opts.review
-    ? await generateReview(diff || '')
-    : await generate(context)
+    ? await generateReview(diff || '', onChunk)
+    : await generate(context, onChunk)
+
+  if (streamToTerminal) {
+    printStreamFooter()
+  }
 
   if (opts.open) {
     printResult(result)
@@ -75,8 +90,6 @@ try {
     }
   } else if (opts.out) {
     writeToFile(result, opts.out)
-  } else {
-    printResult(result)
   }
 } catch (err) {
   if (err.status === 401) {
