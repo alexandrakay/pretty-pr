@@ -94,6 +94,8 @@ export default function GenerateForm() {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hints, setHints] = useState("");
+  const [hintsLoading, setHintsLoading] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -165,6 +167,7 @@ export default function GenerateForm() {
     if (!commits.trim() || loading) return;
 
     setOutput("");
+    setHints("");
     setError(null);
     setLoading(true);
 
@@ -209,6 +212,31 @@ export default function GenerateForm() {
       const updated = [entry, ...loadHistory()];
       saveHistory(updated);
       setHistory(updated.slice(0, HISTORY_MAX));
+
+      // Run coverage hints pass if a diff was provided
+      if (diff.trim()) {
+        setHintsLoading(true);
+        try {
+          const hRes = await fetch("/api/hints", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ diff: diff.trim(), description: accumulated }),
+          });
+          if (hRes.ok) {
+            const hReader = hRes.body!.getReader();
+            const hDecoder = new TextDecoder();
+            while (true) {
+              const { done, value } = await hReader.read();
+              if (done) break;
+              setHints((prev) => prev + hDecoder.decode(value, { stream: true }));
+            }
+          }
+        } catch {
+          // Hints are advisory — silently skip on failure
+        } finally {
+          setHintsLoading(false);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -452,6 +480,22 @@ export default function GenerateForm() {
               <OutputCard title={section} content={parsed[section]!} />
             </div>
           ))}
+          {(hintsLoading || hints) && (
+            <div className="animate-fade-slide-in rounded-lg border border-yellow-500/30 bg-yellow-500/5 overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3 border-b border-yellow-500/20">
+                <span className="text-yellow-400 text-sm">⚠</span>
+                <h3 className="text-sm font-semibold text-text-primary">Coverage Hints</h3>
+                <span className="text-xs text-text-muted ml-auto">AI second opinion on gaps between diff and description</span>
+              </div>
+              <div className="px-5 py-4 text-sm text-text-muted leading-relaxed whitespace-pre-wrap font-sans">
+                {hintsLoading && !hints ? (
+                  <span className="animate-pulse">Checking coverage...</span>
+                ) : (
+                  hints
+                )}
+              </div>
+            </div>
+          )}
           {parsed["PR Title"] && parsed["PR Description"] && (
             <FillPR title={parsed["PR Title"]!} description={parsed["PR Description"]!} ghUser={ghUser} />
           )}
