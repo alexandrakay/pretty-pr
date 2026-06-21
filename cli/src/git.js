@@ -65,3 +65,22 @@ export function assertGitRepo() {
     throw new Error('Not inside a git repository.')
   }
 }
+
+// Returns the ticket ID found in a branch name, or null.
+// Checks Jira/Linear style (e.g. PROJ-123) first, then GitHub issue numbers
+// (e.g. feature/123-add-auth). Returns uppercase to normalize Linear lowercase keys.
+export function getTicketFromBranch(branchName) {
+  if (!branchName) return null
+
+  // Jira / Linear: 2-10 uppercase (or lowercase) letters, hyphen, one or more digits
+  const jiraMatch = branchName.match(/\b([A-Za-z]{2,10})-(\d+)\b/)
+  if (jiraMatch) return `${jiraMatch[1].toUpperCase()}-${jiraMatch[2]}`
+
+  // GitHub issue: branch starts with or contains a bare number segment
+  // e.g. feature/123-add-auth or fix/456
+  const slug = branchName.split('/').pop() ?? branchName
+  const numericMatch = slug.match(/^(\d+)(?:-|$)/)
+  if (numericMatch) return `#${numericMatch[1]}`
+
+  return null
+}
