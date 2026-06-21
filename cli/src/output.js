@@ -1,4 +1,5 @@
 import { writeFileSync } from 'fs'
+import { scoreOutput, formatScoreBar } from './score.js'
 
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
@@ -34,9 +35,16 @@ export function printResult(text) {
   console.log(formatted)
   console.log()
   console.log(divider())
+
+  const { met, total } = scoreOutput(text)
+  const bar = formatScoreBar(met, total)
+  const scoreColor = met === total ? GREEN : DIM
+  console.log(`\n  ${DIM}Quality${RESET}  ${scoreColor}${bar}${RESET}  ${scoreColor}${BOLD}${met}/${total}${RESET}${DIM} sections complete${RESET}\n`)
 }
 
 export function writeToFile(text, filepath) {
   writeFileSync(filepath, text, 'utf8')
+  const { met, total } = scoreOutput(text)
   console.log(`\nWritten to ${filepath}`)
+  console.log(`Quality: ${formatScoreBar(met, total)}  ${met}/${total} sections complete`)
 }
