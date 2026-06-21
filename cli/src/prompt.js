@@ -1,5 +1,8 @@
+import { getTicketFromBranch } from './git.js'
+
 export function buildPrompt({ commits, diff, branch, status }) {
   const sections = []
+  const ticket = getTicketFromBranch(branch)
 
   if (branch) {
     sections.push(`Branch: ${branch}`)
@@ -19,14 +22,14 @@ export function buildPrompt({ commits, diff, branch, status }) {
 
   const context = sections.join('\n\n')
 
-  return `You are a senior engineer writing a pull request description. Based on the git context below, produce clean, useful PR copy.
+  return `You are a senior engineer writing a pull request description. Based on the git context below, produce clean, useful PR copy.${ticket ? `\n\nInclude the ticket reference \`${ticket}\` in the PR title, e.g. \`feat(scope): description [${ticket}]\`.` : ''}
 
 ${context}
 
 Respond with exactly this structure — no extra commentary:
 
 ## PR Title
-[conventional commit style, max 72 chars]
+[conventional commit style, max 72 chars${ticket ? ` — must include ticket reference ${ticket}` : ''}]
 
 ## PR Description
 **What changed:** [2-4 sentences]
