@@ -3,6 +3,7 @@ import { program } from 'commander'
 import { assertGitRepo, getBranchName, getBaseBranch, getCommits, getDiff, getStatus, getCommitsBetweenTags } from '../src/git.js'
 import { generate, generateReview } from '../src/ai.js'
 import { generateChangelog } from '../src/changelog.js'
+import { generateCoverageHints } from '../src/hints.js'
 import { printResult, printStreamHeader, printStreamChunk, printStreamFooter, writeToFile } from '../src/output.js'
 import { ghAvailable, parseOutput, openPR } from '../src/github.js'
 import { copyToClipboard } from '../src/clipboard.js'
@@ -152,6 +153,21 @@ try {
       console.warn(`\n  Warning: clipboard copy failed — ${clip.error}`)
       console.warn('  Falling back to terminal output:\n')
       printResult(result)
+    }
+  }
+
+  // Run coverage hints pass when diff is available and not in review mode
+  if (diff && !opts.review) {
+    console.log('\n  Checking coverage...\n')
+    const YELLOW = '\x1b[33m'
+    const RESET = '\x1b[0m'
+    const BOLD = '\x1b[1m'
+    process.stdout.write(`${BOLD}${YELLOW}⚠ Coverage Hints${RESET}\n\n`)
+    try {
+      await generateCoverageHints(diff, result, (chunk) => process.stdout.write(chunk))
+      process.stdout.write('\n\n')
+    } catch {
+      // Hints are advisory — silently skip if the second pass fails
     }
   }
 } catch (err) {
